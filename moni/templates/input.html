@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Input</Input></title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Input</h1>
+    <h2>Here you can add things to your inventory.</h2>
+    <p>What do you want to add?</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post" action="/input">
+      <label for="category">Category:</label>
+      <label for="item">Item:</label>
+      <label for="quantity">Quantity:</label>
+      <input id="category" name="category" required>
+      <input id="item" name="item" required>
+      <input id="quantity" name="quantity" type="number" min="1" max="1000" step="1" required>
+      <span class="grid-spacer"></span> 
+      <button type="submit">Add</button>
+      <span class="grid-spacer"></span> 
+    </form>
+  </body>
+</html>

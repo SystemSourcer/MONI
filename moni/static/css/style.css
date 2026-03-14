@@ -1,0 +1,80 @@
+/* Grundschrift */
+body {
+  font-family: "Noto Sans", Arial, sans-serif;
+  padding: 2rem;
+  background: #f7f7f7;
+  color: #222;
+}
+
+/* Formular-Layout mit Grid */
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  width: fit-content;
+  min-width: 5rem;
+  /*max-width: 420px;*/
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* Labels linksbündig */
+form label {
+  justify-self: center;
+}
+
+form hr {
+  grid-column: 1 / -1; 
+  border: none;
+  border-top: 1px solid #222; /* dünne graue Linie */
+  margin: 1.5rem 0;           /* Abstand nach oben/unten */
+}
+
+/* Eingabefelder */
+input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  box-sizing: border-box;
+  text-align: center
+}
+
+/* Button über beide Spalten */
+button {
+/*  grid-column: 1 / -1;*/
+  padding: 0.6rem;
+}
+
+table { 
+    border-collapse: collapse; 
+    width: 60%; 
+}
+
+th, td { 
+    border: 1px solid #ccc; 
+    padding: 0.5rem; 
+}
+
+th { 
+    background-color: #f0f0f0; 
+    text-align: left; 
+}
+
+/* Fehleranzeige */
+.error {
+  color: red;
+  grid-column: 1 / -1;
+}
+
+.icon { 
+  position: fixed; 
+  top: 1rem; 
+  right: 1rem; 
+  z-index: 1000; 
+  background: #00a817; 
+  color: #fff; 
+  padding: 0.6rem 1rem; 
+  border-radius: 0.4rem; 
+}

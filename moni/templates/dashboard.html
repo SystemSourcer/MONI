@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Hello, {{ user }}</h1>
+    <p>Role: {{ role }}</p>
+    <p>Following functions are available:</p>
+    {% if role == "Admin" %}
+      <button type="button" onclick="window.location.href='/input'">Input</button>
+      <button type="button" onclick="window.location.href='/set_price'">Set price</button>
+    {% endif %}
+    <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    <h2>Inventory:</h2>
+    {% for category, idl in inventory.items() %}
+    <div class="heading-with-button">
+    <form action="/output" method="get">
+      <label for="category">{{ category }}</label>
+      <input type="hidden" name="category" id="category" value="{{ category }}">
+      <button type="submit">Output</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+             {% for key in idl[0].keys() %}
+                <th>{{ key }}</th>
+              {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for id in idl %}
+            <tr>
+            {%for value in id.values()%}
+              <td>
+              {{value}}
+              </td>
+            {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+  </body>
+</html>
