@@ -158,34 +158,4 @@ async def output_post(request: Request):
 
 
 
-
-"""
-
-# Imports
-
-import sqlmodel
-from passlib.context import CryptContext
-
-# Functions
-def main():
-    # Config
-    SECRET_KEY = '0000'
-    ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-    # DB (SQLite)
-    DATABASE_URL = "sqlite:///./db.sqlite"
-    engine = sqlmodel.create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-
-
-# Objects
-
-
-
-
-# Global
-if __name__ == '__main__': # 
-    main() # 
-
 # This is the last line of the Code :)
-"""
