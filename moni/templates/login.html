@@ -17,7 +17,10 @@
       <label for="role">Role (Admin / Worker):</label>
       <label for="user">User:</label>
       <label for="password">Passwort:</label>
-      <input id="role" name="role" required>
+      <select id="role" name="role">
+        <option value="worker">Worker</option>
+        <option value="admin">Admin</option>
+      </select>
       <input id="user" name="user" required>
       <input id="password" name="password" type="password" required>
       <span class="grid-spacer"></span> 
