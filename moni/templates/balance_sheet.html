@@ -6,3 +6,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
+  <body>
+    <div class="icon" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Balance Sheet</h1>
+    <h2>Here you can make your balance.</h2>
+    <p>Set the Filter options for the balance.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form id="balanceFilter">
+      <label>From:</label>
+      <label>Up to:</label>
+      <span class="grid-spacer"></span> 
+      <input type="datetime-local" name="start" id="start" required>
+      <input type="datetime-local" name="end" id="end" required>
+      <span class="grid-spacer"></span> 
+      <label>Category:</label>
+      <label>Item:</label>
+      <span class="grid-spacer"></span> 
+      <input name="category" id="category">
+      <input name="item" id="item">
+      <button type="submit">Make Balance</button>
+    </form>
+    <div id="flow-log-data"
+     data-flow-log='{{ flow_log | tojson | safe }}'>
+    </div>
+    <h2>Balance:</h2>
+    <table>
+        <thead>
+            <tr>
+             {% for key in flow_log["0"].keys() %}
+                <th>{{ key }}</th>
+              {% endfor %}
+            </tr>
+        </thead>
+        <tbody id="balance-body">
+        </tbody>
+    </table>
+    <script>
+    document.getElementById('balanceFilter').addEventListener('submit', function (event) {
+      event.preventDefault(); // prevents the actual/real submission/reload
+      console.log("Submit-Handler wurde aufgerufen");
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+      const item = document.getElementById('item').value;
+      const elem = document.getElementById("flow-log-data");
+      const flow_log = JSON.parse(elem.dataset.flowLog);
+      const tbody = document.getElementById('balance-body');
+      tbody.innerHTML = "";  // alten Inhalt löschen
+      for (const [id, eintrag] of Object.entries(flow_log)) {
+        const tr = document.createElement('tr');
+        const keys = Object.keys(eintrag)
+        for (const key of keys) {
+          const td = document.createElement('td');
+          td.textContent = eintrag[key] ?? "";  // falls ein Feld mal fehlt
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    });
+</script>
+  </body>
+</html>
