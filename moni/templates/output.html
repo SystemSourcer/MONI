@@ -8,7 +8,7 @@
   </head>
   <body>
     <div class="icon" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Output</h1>
+    <h1>Output: {{category}}</h1>
     <h2>Here you can sell or give out things from the selected assortment.</h2>
     <p>Just touch or click the correstbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
@@ -20,7 +20,7 @@
       <label>Quantity:</label>
       <label>Price in €:</label>
       <hr id="hrForm">
-      <button type="submit">Give Out</button>
+      <button type="submit" name="category" value={{category}}>Give Out</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
     </form>
