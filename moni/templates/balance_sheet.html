@@ -15,10 +15,13 @@
     <form id="balanceFilter">
       <label>From:</label>
       <label>Up to:</label>
-      <span class="grid-spacer"></span> 
+      <label>Type</label>
       <input type="datetime-local" name="start" id="start" required>
       <input type="datetime-local" name="end" id="end" required>
-      <span class="grid-spacer"></span> 
+      <select id="type" name="type">
+        <option value="output">Output</option>
+        <option value="input">Input</option>
+      </select>
       <label>Category:</label>
       <label>Item:</label>
       <span class="grid-spacer"></span> 
@@ -30,16 +33,24 @@
      data-flow-log='{{ flow_log | tojson | safe }}'>
     </div>
     <h2>Balance:</h2>
-    <table>
-        <thead>
-            <tr>
-             {% for key in flow_log["0"].keys() %}
-                <th>{{ key }}</th>
-              {% endfor %}
-            </tr>
-        </thead>
-        <tbody id="balance-body">
-        </tbody>
+    <table  id="balance-table">
+      <thead>
+          <tr>
+            {% for key in flow_log[0].keys() %}
+              <th style="text-align: center;">{{ key }}</th>
+            {% endfor %}
+          </tr>
+      </thead>
+      <tbody id="balance-body">
+      </tbody>
+      <tfoot>
+        <tr>
+          {% for key in flow_log[0].keys() %}
+              <th></th>
+            {% endfor %}
+          <th>Summe</th>
+        </tr>
+      </tfoot>
     </table>
     <script>
     document.getElementById('balanceFilter').addEventListener('submit', function (event) {
@@ -47,17 +58,31 @@
       console.log("Submit-Handler wurde aufgerufen");
       const start = document.getElementById('start').value;
       const end = document.getElementById('end').value;
+      const typ = document.getElementById('type').value;
+      const cat = document.getElementById('category').value;
       const item = document.getElementById('item').value;
       const elem = document.getElementById("flow-log-data");
       const flow_log = JSON.parse(elem.dataset.flowLog);
+      const theadThs = document.querySelectorAll('#balance-table thead th');
+      const columns = Array.from(theadThs).map(th => th.textContent.trim());
       const tbody = document.getElementById('balance-body');
       tbody.innerHTML = "";  // alten Inhalt löschen
+      flowLogLoop:
       for (const [id, eintrag] of Object.entries(flow_log)) {
         const tr = document.createElement('tr');
-        const keys = Object.keys(eintrag)
-        for (const key of keys) {
+        for (const col of columns) {
+          if (col === 'type' && eintrag[col] !== typ){
+            continue flowLogLoop
+          }
+          if (cat !=='' && col === 'category' && eintrag[col] !== cat){
+            continue flowLogLoop
+          }
+          if (item !=='' && col === 'item' && eintrag[col] !== item){
+            continue flowLogLoop
+          }
           const td = document.createElement('td');
-          td.textContent = eintrag[key] ?? "";  // falls ein Feld mal fehlt
+          td.style.textAlign = 'center'
+          td.textContent = eintrag[col] ?? "";  // falls ein Feld mal fehlt
           tr.appendChild(td);
         }
         tbody.appendChild(tr);

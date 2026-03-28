@@ -24,8 +24,10 @@ except: inventory = dict()
 try:
     with open("/workspace/data/flow_log.json", "r", encoding="utf-8") as flow_log_file:
         flow_log  = json.load(flow_log_file)
+    
+    flow_log = {int(k): v for k, v in flow_log.items()} # because key are streings after loding but int wen createt thru the system
 
-except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'price': '0'}}
+except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'price': '0'}} # need init entry becaus counts with last entry...
 
 print(inventory)
 print(flow_log)
@@ -93,7 +95,7 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     print(inventory[category])
 
     n = int(next(reversed(flow_log)))
-    flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'input', 'role':role, 'user': user, 'item':item, 'quantity':quantity}
+    flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'input', 'role':role, 'user': user, 'category':category, 'item':item, 'quantity':quantity}
 
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
         json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
@@ -184,13 +186,13 @@ async def return_post(request: Request):
         print(flow_log)
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'return', 'role':role, 'user': user, 'category':category, 'item':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'output', 'role':role, 'user': user, 'category':category, 'item':value}
 
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = value
             for idl in inventory.values():
                 for id in idl:
-                    if id['item'] in field_name: id['quantity'] += int(value)
+                    if id['item'] in field_name: id['quantity'] -= int(value)
 
         elif 'price' in field_name:
             flow_log[n+1]['price'] = value 

@@ -42,8 +42,8 @@
         quantity.type = 'number';
         quantity.name = `${name}_quantity`;  
         quantity.value = "0";
-        quantity.min = "1";
-        quantity.max = "100";
+        quantity.min = "-100";
+        quantity.max = "-1";
         quantity.step = "1";
         price = document.createElement('input');
         price.type = 'text';
@@ -61,7 +61,7 @@
           if (isUpdating) return;
           isUpdating = true;
           const q = parseFloat(quantity.value);
-          price.value = isNaN(q) ? '' : (-1 * q * pricePerUnit).toFixed(2);
+          price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
           
           let sum = 0;
           const priceFields = document.querySelectorAll(('input[name*="price"]'));
@@ -78,10 +78,10 @@
       }
       // Wert erhöhen
       const current = parseInt(quantity.value || "0", 10);
-      quantity.value = current + 1;
+      quantity.value = current - 1;
 
       const q = parseFloat(quantity.value);
-      price.value = isNaN(q) ? '' : (-1 * q * pricePerUnit).toFixed(2);
+      price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
 
       let sum = 0;
       const priceFields = document.querySelectorAll(('input[name*="price"]'));
