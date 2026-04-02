@@ -1,4 +1,5 @@
 import json
+import hashlib
 from datetime import datetime
 from urllib.parse import quote_plus
 from fastapi import FastAPI, Request, Form, status
@@ -11,8 +12,8 @@ app.mount("/static", StaticFiles(directory="moni/static"), name="static")
 templates = Jinja2Templates(directory="/workspace/moni/templates")
 
 role_dict = {
-    "admin": {"password": "Admin"},
-    "worker": {"password": "0000",},
+    'admin': {'password': '887375daec62a9f02d32a63c9e14c7641a9a8a42e4fa8f6590eb928d9744b57bb5057a1d227e4d40ef911ac030590bbce2bfdb78103ff0b79094cee8425601f5'},
+    'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0',},
 }
 
 try:
@@ -42,7 +43,8 @@ def login_get(request: Request):
 
 @app.post("/login")
 def login_post(request: Request, role: str = Form(...), user: str = Form(...), password: str = Form(...)):
-    if not role in role_dict.keys() or role_dict[role]["password"] != password:
+    
+    if not role in role_dict.keys() or role_dict[role]["password"] != hashlib.sha512((password).encode()).hexdigest():
         return templates.TemplateResponse("login.html", {"request": request, "error": "Ungültiger Benutzername oder Passwort"})
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
