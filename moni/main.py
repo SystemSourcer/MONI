@@ -111,7 +111,7 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     return response
 
 @app.get("/set_price")
-def input(request: Request):
+def set_price(request: Request):
     return templates.TemplateResponse("set_price.html", {"request": request, "inventory": inventory})
 
 @app.post("/set_price") 
@@ -188,7 +188,7 @@ async def return_post(request: Request):
         print(flow_log)
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'output', 'role':role, 'user': user, 'category':category, 'item':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'return', 'role':role, 'user': user, 'category':category, 'item':value}
 
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = value
@@ -211,10 +211,12 @@ async def return_post(request: Request):
     return response
 
 @app.get("/balance_sheet")
-def input(request: Request):
+def balance_sheet(request: Request):
     return templates.TemplateResponse("balance_sheet.html", {"request": request, "flow_log": flow_log})
 
-
+@app.get("/order")
+def order(request: Request):
+    return templates.TemplateResponse("order.html", {"request": request, "inventory": inventory})
 
 
 
