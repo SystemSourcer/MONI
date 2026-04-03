@@ -19,8 +19,12 @@
       <input type="datetime-local" name="start" id="start" required>
       <input type="datetime-local" name="end" id="end" required>
       <select id="type" name="type">
-        <option value="output">Output</option>
+        <option value="out_all">Output (all)</option>
+        <option value="order">Order (only)</option>
+        <option value="output">Output (only)</option>
+        <option value="return">Return (only)</option>
         <option value="input">Input</option>
+        <option value="all">All</option>
       </select>
       <label>Category:</label>
       <label>Item:</label>
@@ -33,7 +37,7 @@
      data-flow-log='{{ flow_log | tojson | safe }}'>
     </div>
     <h2>Balance:</h2>
-    <table  id="balance-table">
+    <table id="balance-table">
       <thead>
           <tr>
             {% for key in flow_log[0].keys() %}
@@ -43,35 +47,55 @@
       </thead>
       <tbody id="balance-body">
       </tbody>
-      <tfoot>
-        <tr>
+      <tfoot id="balance-foot">
+        <tr id="sumrow">
           {% for key in flow_log[0].keys() %}
-              <th></th>
+              <th id="sum{{key}}" style="text-align: center;"></th>
             {% endfor %}
-          <th>Summe</th>
+          <th style="text-align: center;">Summe</th>
         </tr>
       </tfoot>
     </table>
     <script>
+    function isnumvalue(text) {
+      if (!text) return false;
+      // Dezimal-Komma in Dezimal-Punkt umwandeln
+      text = text.replace(',', '.').trim();
+      return !isNaN(text) && text !== '';
+    }
+
+    function parsenum(text) {
+      return parseFloat(text.replace(',', '.')) || 0;
+    }
+
     document.getElementById('balanceFilter').addEventListener('submit', function (event) {
       event.preventDefault(); // prevents the actual/real submission/reload
       console.log("Submit-Handler wurde aufgerufen");
       const start = document.getElementById('start').value;
       const end = document.getElementById('end').value;
-      const typ = document.getElementById('type').value;
+      const type_string = document.getElementById('type').value;
+      let type_array
+      if (type_string === 'out_all'){
+        type_array = ['order','output','return'];
+      } else if (type_string === 'all'){
+        type_array = ['order','output','return', 'input'];
+      } else {
+        type_array = [type_string];
+      }
       const cat = document.getElementById('category').value;
       const item = document.getElementById('item').value;
       const elem = document.getElementById("flow-log-data");
-      const flow_log = JSON.parse(elem.dataset.flowLog);
+      const flow_log = JSON.parse(elem.dataset.flowLog); // here correct because from html to js data-flow-log turns to elem.dataset.flowLog
       const theadThs = document.querySelectorAll('#balance-table thead th');
       const columns = Array.from(theadThs).map(th => th.textContent.trim());
       const tbody = document.getElementById('balance-body');
+      const tfoot = document.getElementById('balance-foot');
       tbody.innerHTML = "";  // alten Inhalt löschen
       flowLogLoop:
-      for (const [id, eintrag] of Object.entries(flow_log)) {
+      for (const [id, eintrag] of Object.entries(flow_log)){
         const tr = document.createElement('tr');
-        for (const col of columns) {
-          if (col === 'type' && eintrag[col] !== typ){
+        for (const col of columns){
+          if (col === 'type' && !type_array.includes(eintrag[col])){
             continue flowLogLoop
           }
           if (cat !=='' && col === 'category' && eintrag[col] !== cat){
@@ -87,7 +111,29 @@
         }
         tbody.appendChild(tr);
       }
+      for (let col = 0; col < columns.length; col++){
+        let sum = 0;
+        let onlynum = true;
+        for (let row = 0; row < tbody.rows.length; row++){
+          const zelle = tbody.rows[row].cells[col];
+          if (!zelle) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+          const text = zelle.textContent.trim();
+          if (text === '') continue; // ignore empy cells
+          if (!isnumvalue(text)) {
+            onlynum = false;
+            break; // do not sum cols with text
+          }
+          sum += parsenum(text);
+        }
+        const targetcell =  tfoot.rows[0].cells[col];
+        if (!targetcell) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+        if (onlynum){
+          targetcell.textContent = sum.toFixed(2);
+        } else {
+          targetcell.textContent = "---" ;// --- sring in not only number cols
+        }
+      }
     });
-</script>
+    </script>
   </body>
 </html>
