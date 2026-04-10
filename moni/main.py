@@ -9,11 +9,11 @@ from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="moni/static"), name="static")
-templates = Jinja2Templates(directory="/workspace/moni/templates")
-
+templates = Jinja2Templates(directory="./moni/templates")
+print("TEMPLATES_ENV_CACHE_TYPE:", type(templates.env.cache))
 role_dict = {
     'admin': {'password': '887375daec62a9f02d32a63c9e14c7641a9a8a42e4fa8f6590eb928d9744b57bb5057a1d227e4d40ef911ac030590bbce2bfdb78103ff0b79094cee8425601f5'},
-    'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0',},
+    'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0'},
 }
 
 try:
@@ -39,13 +39,13 @@ def root():
 
 @app.get("/login")
 def login_get(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request,"login.html")
 
 @app.post("/login")
 def login_post(request: Request, role: str = Form(...), user: str = Form(...), password: str = Form(...)):
     
     if not role in role_dict.keys() or role_dict[role]["password"] != hashlib.sha512((password).encode()).hexdigest():
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Ungültiger Benutzername oder Passwort"})
+        return templates.TemplateResponse(request, "login.html", {"error": "Ungültiger Benutzername oder Passwort"})
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -55,9 +55,8 @@ def login_post(request: Request, role: str = Form(...), user: str = Form(...), p
 def dashboard(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
-    if not role:
-        return RedirectResponse(url="/login")
-    return templates.TemplateResponse("dashboard.html", {"request": request, "role": role, "user": user, "inventory":inventory})
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "dashboard.html", {"role": role, "user": user, "inventory":inventory})
 
 @app.post("/dashboard")
 def dashboard_post(request: Request, category: str = Form(...), action: str = Form(...)):
@@ -78,7 +77,9 @@ def logout():
 
 @app.get("/input")
 def input(request: Request):
-    return templates.TemplateResponse("input.html", {"request": request})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "input.html")
 
 @app.post("/input")
 def input_post(request: Request, category: str = Form(...), item: str = Form(...), quantity: str = Form(...)):
@@ -112,7 +113,9 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
 
 @app.get("/set_price")
 def set_price(request: Request):
-    return templates.TemplateResponse("set_price.html", {"request": request, "inventory": inventory})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "set_price.html", {"inventory": inventory})
 
 @app.post("/set_price") 
 async def set_price_post(request: Request):
@@ -133,7 +136,9 @@ async def set_price_post(request: Request):
 
 @app.get("/output")
 def output(request: Request, category: str):
-    return templates.TemplateResponse("output.html", {"request": request, "category":category, "assortment": inventory[category]})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category]})
 
 @app.post("/output")
 async def output_post(request: Request):
@@ -173,7 +178,9 @@ async def output_post(request: Request):
 
 @app.get("/return")
 def output(request: Request, category: str):
-    return templates.TemplateResponse("return.html", {"request": request, "category":category, "assortment": inventory[category]})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "return.html", {"category":category, "assortment": inventory[category]})
 
 @app.post("/return")
 async def return_post(request: Request):
@@ -212,11 +219,15 @@ async def return_post(request: Request):
 
 @app.get("/balance_sheet")
 def balance_sheet(request: Request):
-    return templates.TemplateResponse("balance_sheet.html", {"request": request, "flow_log": flow_log})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request,"balance_sheet.html", {"flow_log": flow_log})
 
 @app.get("/order")
 def order(request: Request):
-    return templates.TemplateResponse("order.html", {"request": request, "inventory": inventory})
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request,"order.html", {"inventory": inventory})
 
 
 

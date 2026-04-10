@@ -6,6 +6,10 @@ body {
   color: #222;
 }
 
+body.dark-mode {
+  background: #222;
+  color: #f7f7f7;
+}
 /* Formular-Layout mit Grid */
 form {
   display: grid;
@@ -68,12 +72,23 @@ th {
   grid-column: 1 / -1;
 }
 
-.icon { 
+.icon-moni { 
   position: fixed; 
   top: 1rem; 
   right: 1rem; 
   z-index: 1000; 
   background: #00a817; 
+  color: #fff; 
+  padding: 0.6rem 1rem; 
+  border-radius: 0.4rem; 
+}
+
+.icon-dark { 
+  position: fixed; 
+  bottom: 1rem; 
+  right: 1rem; 
+  z-index: 999; 
+  background: #808080; 
   color: #fff; 
   padding: 0.6rem 1rem; 
   border-radius: 0.4rem; 

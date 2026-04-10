@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
-    <div class="icon" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Hello, {{ user }}</h1>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <div class="icon-dark" onclick="window.location.href='/dashboard'"><h1>Dark<h1></div>
+    <h1>Hello {{ user }}</h1>
     <p>Role: {{ role }}</p>
     <p>Following functions are available:</p>
     {% if role == "admin" %}
