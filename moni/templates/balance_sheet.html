@@ -57,6 +57,11 @@
       </tfoot>
     </table>
     <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+
     function isnumvalue(text) {
       if (!text) return false;
       // Dezimal-Komma in Dezimal-Punkt umwandeln

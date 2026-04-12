@@ -27,6 +27,11 @@
       <input type="text" name="total" value="0" readonly>
     </form>
     <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+
     function clickButton(name, pricePerUnit) {
       const form = document.getElementById('OutputForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden

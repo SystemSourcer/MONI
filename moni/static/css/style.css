@@ -37,12 +37,20 @@ form hr {
   margin: 1.5rem 0;           /* Abstand nach oben/unten */
 }
 
+body.dark-mode form{
+  background: #808080;
+}
 /* Eingabefelder */
 input {
   width: 100%;
   padding: 0.4rem 0.5rem;
   box-sizing: border-box;
   text-align: center
+}
+
+body.dark-mode input{
+  background: #404040;
+  color: #f7f7f7;
 }
 
 /* Button über beide Spalten */
@@ -57,13 +65,17 @@ table {
 }
 
 th, td { 
-    border: 1px solid #ccc; 
+    border: 1px solid #808080; 
     padding: 0.5rem; 
 }
 
 th { 
     background-color: #f0f0f0; 
     text-align: left; 
+}
+
+body.dark-mode th {
+  background-color: #404040;
 }
 
 /* Fehleranzeige */
@@ -88,7 +100,7 @@ th {
   bottom: 1rem; 
   right: 1rem; 
   z-index: 999; 
-  background: #808080; 
+  background: #404040; 
   color: #fff; 
   padding: 0.6rem 1rem; 
   border-radius: 0.4rem; 

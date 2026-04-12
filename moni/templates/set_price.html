@@ -28,4 +28,10 @@
       <button type="submit">Set Price</button>
     </form>
   </body>
+  <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+  </script>
 </html>
