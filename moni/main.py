@@ -4,13 +4,14 @@ from datetime import datetime
 from urllib.parse import quote_plus
 from fastapi import FastAPI, Request, Form, status
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="moni/static"), name="static")
 templates = Jinja2Templates(directory="./moni/templates")
-print("TEMPLATES_ENV_CACHE_TYPE:", type(templates.env.cache))
+
 role_dict = {
     'admin': {'password': '887375daec62a9f02d32a63c9e14c7641a9a8a42e4fa8f6590eb928d9744b57bb5057a1d227e4d40ef911ac030590bbce2bfdb78103ff0b79094cee8425601f5'},
     'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0'},
@@ -32,6 +33,10 @@ except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type
 
 print(inventory)
 print(flow_log)
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("/workspace/moni/static/favicon.ico")
 
 @app.get("/")
 def root():
