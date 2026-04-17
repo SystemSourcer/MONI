@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tabel Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Tabel Management</h1>
+    <h2>Here you can enabel or disabel the tabels, at which orders should be possible.</h2>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form class="button-grid" method="post" action="/tabel_management">
+      {% for tabel, value in tabel_dict.items() %}
+        {% if value %} 
+          <button style="background: #32df07; font-size : 24px; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
+        {% else %}
+          <button style="font-size : 24px; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
+        {% endif %}
+      {% endfor %}
+    </form>
+  </body>
+  <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+  </script>
+</html>
