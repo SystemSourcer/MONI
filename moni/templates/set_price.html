@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Set Price</Input></title>
+    <title>Set Price</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Input</h1>
+    <h1>Set Price</h1>
     <h2>Here you can set a price for things in your inventory.</h2>
     <p>Set your prices carefully...</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
