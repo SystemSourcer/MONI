@@ -12,14 +12,16 @@
     <h1>Hello {{ user }}</h1>
     <p>Role: {{ role }}</p>
     <p>Following functions are available:</p>
-    {% if role == "admin" %}
-      <button type="button" onclick="window.location.href='/input'">Input</button>
-      <button type="button" onclick="window.location.href='/set_price'">Set Price</button>
-      <button type="button" onclick="window.location.href='/tabel_management'">Table Management</button>
-      <button type="button" onclick="window.location.href='/balance_sheet'">Balance Sheet</button>
-    {% endif %}
-    <button type="button" onclick="window.location.href='/order'">Order</button>
-    <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    <form class="button-grid">
+      {% if role == "admin" %}
+        <button type="button" onclick="window.location.href='/input'">Input</button>
+        <button type="button" onclick="window.location.href='/set_price'">Set Price</button>
+        <button type="button" onclick="window.location.href='/tabel_management'">Table Management</button>
+        <button type="button" onclick="window.location.href='/balance_sheet'">Balance Sheet</button>
+      {% endif %}
+      <button type="button" onclick="window.location.href='/order_place'">Order</button>
+      <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    </form>
     <h2>Inventory:</h2>
     {% for category, idl in inventory.items() %}
     <form method="post" action="/dashboard">

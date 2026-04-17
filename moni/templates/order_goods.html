@@ -8,16 +8,17 @@
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Order</h1>
-    <h2>Here you can order over all categories from the inventory.</h2>
-    <p>Just touch or click the correstbonding buttons.</p>
+    <h1>Order Goods for: {{tabel}}</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form class="button-grid">
     {% for cattegory in inventory %}
       {% for item_dict in inventory[cattegory] %}
-        <button style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" data-category="{{category}}" onclick="clickButton(this.dataset.category, dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+        <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" data-category="{{category}}" onclick="clickButton(this.dataset.category, dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
       {% endfor %}
     {% endfor %}
+    </form>
     <form id="OrderForm" method="post" action="order">
+      <input type="hidden" name="place" value="{{place}}">
       <label>Item:</label>
       <label>Quantity:</label>
       <label>Price in €:</label>
@@ -32,7 +33,7 @@
         element.classList.toggle("dark-mode");
       }
 
-    function clickButton(category, name, pricePerUnit) {
+    function clickButton(cat, name, pricePerUnit) {
       const form = document.getElementById('OrderForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
       let category = document.querySelector(`input[name="${name}_category"]`);
@@ -45,7 +46,7 @@
       if (!item) {
         category = document.createElement('input');
         category.name = `${name}_category`
-        category.value = category;
+        category.value = cat;
         category.type = 'hidden'
         item = document.createElement('input');
         item.name = `${name}_item`
