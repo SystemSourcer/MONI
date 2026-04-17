@@ -10,6 +10,7 @@ body.dark-mode {
   background: #222;
   color: #f7f7f7;
 }
+
 /* Formular-Layout mit Grid */
 form {
   display: grid;
@@ -25,9 +26,15 @@ form {
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
-form.button-grid{
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+form.tabel-grid{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
+
+form.button-grid{
+  gap: 0.5rem 0.5rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
 /* Labels linksbündig */
 form label {
   justify-self: center;
@@ -48,7 +55,8 @@ input {
   width: 100%;
   padding: 0.4rem 0.5rem;
   box-sizing: border-box;
-  text-align: center
+  text-align: center;
+  font-size: 1rem;
 }
 
 body.dark-mode input{
@@ -56,10 +64,9 @@ body.dark-mode input{
   color: #f7f7f7;
 }
 
-/* Button über beide Spalten */
 button {
-/*  grid-column: 1 / -1;*/
-  padding: 0.6rem;
+  font-size: 1rem;
+  padding: 0.5rem;
 }
 
 table { 
