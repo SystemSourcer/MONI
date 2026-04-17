@@ -17,6 +17,13 @@ role_dict = {
     'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0'},
 }
 
+tabel_dict = {}
+for letter in ['A','B','C','D','E','F','G','H']:
+    for number in range(10):
+        tabel_dict[letter+str(number)]=False
+
+order_temp_list = [],
+
 try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
         inventory = json.load(inventory_file)
@@ -127,7 +134,7 @@ async def set_price_post(request: Request):
     form = await request.form()
 
     for field_name, value in form.items():
-        print(field_name, value)
+        print(f"New price vor {field_name}: {value}")
         for idl in inventory.values():
             for id in idl:
                 if id['item'] == field_name: id['price'] = value
@@ -135,6 +142,25 @@ async def set_price_post(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
+
+@app.get("/tabel_management")
+def tabel_management(request: Request):
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    return templates.TemplateResponse(request, "tabel_management.html", {"tabel_dict": tabel_dict})
+
+@app.post("/tabel_management") 
+async def tabel_management_post(request: Request, tabel: str = Form(...)):
+    print(tabel_dict[tabel])
+    if tabel_dict[tabel] == True: tabel_dict[tabel] = False
+    else: tabel_dict[tabel] = True
+    
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+    response = RedirectResponse(url="/tabel_management", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
@@ -234,6 +260,39 @@ def order(request: Request):
     if not role: return RedirectResponse(url="/login")
     return templates.TemplateResponse(request,"order.html", {"inventory": inventory})
 
+@app.post("/order")
+async def order_post(request: Request):
+    form = await request.form()
+    print(form)
 
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+
+    for field_name, value in form.items():
+        print(flow_log)
+        if 'category' in field_name:
+            n = int(next(reversed(flow_log)))
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_1', 'role':role, 'user': user, 'category':value}
+
+        elif 'item' in field_name:
+            flow_log[n+1]['item'] = value
+
+        elif 'quantity' in field_name: 
+            flow_log[n+1]['quantity'] = 0
+
+        elif 'price' in field_name:
+            flow_log[n+1]['price'] = value 
+
+    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
+    with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
+        json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+
+    cat_param = quote_plus(category)
+    response = RedirectResponse(url=f"/output?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
 
 # This is the last line of the Code :)
