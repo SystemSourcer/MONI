@@ -14,15 +14,15 @@
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     {% for cattegory in inventory %}
       {% for item_dict in inventory[cattegory] %}
-        <button  style="font-size : 24px; width: 200px; height: 100px;" type="button"  data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}</button>
+        <button style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" data-category="{{category}}" onclick="clickButton(this.dataset.category, dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
       {% endfor %}
     {% endfor %}
-    <form id="OutputForm" method="post" action="output">
+    <form id="OrderForm" method="post" action="order">
       <label>Item:</label>
       <label>Quantity:</label>
       <label>Price in €:</label>
       <hr id="hrForm">
-      <button type="submit" name="category" value={{category}}>Order</button>
+      <button type="submit">Order</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
     </form>
@@ -32,16 +32,21 @@
         element.classList.toggle("dark-mode");
       }
 
-    function clickButton(name, pricePerUnit) {
-      const form = document.getElementById('OutputForm');
+    function clickButton(category, name, pricePerUnit) {
+      const form = document.getElementById('OrderForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
+      let category = document.querySelector(`input[name="${name}_category"]`);
       let item = document.querySelector(`input[name="${name}_item"]`);
       let quantity = document.querySelector(`input[name="${name}_quantity"]`);
-      let price    = document.querySelector(`input[name="${name}_price"]`);
+      let price = document.querySelector(`input[name="${name}_price"]`);
       let total = document.querySelector(`input[name="total"]`);
 
       // Falls es noch nicht existiert, anlegen
       if (!item) {
+        category = document.createElement('input');
+        category.name = `${name}_category`
+        category.value = category;
+        category.type = 'hidden'
         item = document.createElement('input');
         item.name = `${name}_item`
         item.value = name;
@@ -57,6 +62,7 @@
         price.name = `${name}_price`;  
         price.value = "0";
         price.readOnly = true;
+        form.insertBefore(category, hrForm)
         form.insertBefore(item, hrForm)
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
