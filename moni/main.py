@@ -154,7 +154,6 @@ def tabel_management(request: Request):
 
 @app.post("/tabel_management") 
 async def tabel_management_post(request: Request, tabel: str = Form(...)):
-    print(tabel_dict[tabel])
     if tabel_dict[tabel] == True: tabel_dict[tabel] = False
     else: tabel_dict[tabel] = True
     
@@ -254,14 +253,18 @@ def balance_sheet(request: Request):
     if not role: return RedirectResponse(url="/login")
     return templates.TemplateResponse(request,"balance_sheet.html", {"flow_log": flow_log})
 
-@app.get("/order")
-def order(request: Request):
+@app.get("/order_place")
+def order_place(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request,"order.html", {"inventory": inventory})
+    return templates.TemplateResponse(request,"order_place.html", {"tabel_dict": tabel_dict})
 
-@app.post("/order")
-async def order_post(request: Request):
+@app.post("/order_place") 
+async def order_place_post(request: Request, tabel: str = Form(...)):
+    return templates.TemplateResponse(request,"order_goods.html", {"inventory": inventory, "tabel": tabel})
+
+@app.post("/order_goods")
+async def order_goods_post(request: Request):
     form = await request.form()
     print(form)
 
@@ -289,8 +292,8 @@ async def order_post(request: Request):
     with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
         json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
 
-    cat_param = quote_plus(category)
-    response = RedirectResponse(url=f"/output?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
+  
+    response = RedirectResponse(url=f"/order_place", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response

@@ -11,12 +11,12 @@
     <h1>Tabel Management</h1>
     <h2>Here you can enabel or disabel the tabels, at which orders should be possible.</h2>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form class="button-grid" method="post" action="/tabel_management">
+    <form class="tabel-grid"  method="post" action="/tabel_management">
       {% for tabel, value in tabel_dict.items() %}
         {% if value %} 
-          <button style="background: #32df07; font-size : 24px; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
+          <button style="background: #32df07; font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
         {% else %}
-          <button style="font-size : 24px; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
+          <button style="font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
         {% endif %}
       {% endfor %}
     </form>

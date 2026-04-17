@@ -12,9 +12,11 @@
     <h2>Here you can enter things which return to the selected assortment.</h2>
     <p>Just touch or click the correstbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    {% for id in assortment %}
-      <button  style="font-size : 24px; width: 200px; height: 100px;" type="button"  data-item="{{ id['item'] }}" data-price="{{ id['price'] }}" onclick="clickButton(this.dataset.item, parseFloat(this.dataset.price))">{{id['item']}}</button>
-    {% endfor %}
+    <form class="button-grid">
+      {% for id in assortment %}
+        <button  style="font-size : 24px; width: 200px; height: 100px;" type="button"  data-item="{{ id['item'] }}" data-price="{{ id['price'] }}" onclick="clickButton(this.dataset.item, parseFloat(this.dataset.price))">{{id['item']}}</button>
+      {% endfor %}
+    </form>
     <form id="OutputForm" method="post" action="return">
       <label>Item:</label>
       <label>Quantity:</label>

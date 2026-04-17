@@ -12,9 +12,11 @@
     <h2>Here you can sell or give out things from the selected assortment.</h2>
     <p>Just touch or click the correstbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    {% for item_dict in assortment %}
-      <button  style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
-    {% endfor %}
+    <form class="button-grid">
+      {% for item_dict in assortment %}
+        <button  style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+      {% endfor %}
+    </form>
     <form id="OutputForm" method="post" action="output">
       <label>Item:</label>
       <label>Quantity:</label>
