@@ -21,10 +21,12 @@
       <label>Item:</label>
       <label>Quantity:</label>
       <label>Price in €:</label>
+      <span class="grid-spacer"></span> 
       <hr id="hrForm">
-      <button type="submit" name="category" value={{category}}>Take back</button>
+      <span class="grid-spacer"></span> 
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
+      <button type="submit" name="category" value={{category}}>Take back</button>
     </form>
     <script>
       var element = document.body;
@@ -57,10 +59,12 @@
         price.name = `${name}_price`;  
         price.value = "0";
         price.readOnly = true;
+        const gridSpacer = document.createElement('span');
+        gridSpacer.className = 'grid-spacer';
         form.insertBefore(item, hrForm)
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
-      
+        form.insertBefore(gridSpacer, hrForm);
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 

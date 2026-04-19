@@ -25,7 +25,7 @@
     <h2>Inventory:</h2>
     {% for category, idl in inventory.items() %}
     <form method="post" action="/dashboard">
-      <label for="category">{{ category }}</label>
+      <label style="grid-column: 1 / span 2;" for="category">{{ category }}</label>
       <input type="hidden" name="category" id="category" value="{{ category }}">
       <button type="submit" name="action" value="Output">Output</button>
       <button type="submit" name="action" value="Return">Return</button>
