@@ -1,0 +1,33 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Issue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Issue: {{order['category']}}</h1>
+    <h2>Order for place {{ order['place'] }}:</h2>
+    <form method="post" action="/issue">
+    <label  for="negotiator"> Ordered from:</label>
+    <input type="text" value="{{ order['negotiator'] }}" readonly>
+    <label for="order-time">Ordred at:</label>
+    <input type="text" value="{{ order['ordered'] }}" readonly>
+    <label  for="organizer"> Prepared from:</label>
+    <input type="text" value="{{ order['organizer'] }}" readonly>
+    <label for="order-time">Prepared at:</label>
+    <input type="text" value="{{ order['preprared'] }}" readonly>
+    <hr id="hrForm">
+    <label>Item:</label>
+    <label>Quantity:</label>
+    <label style="grid-column: 3 / span 2">Custom:</label>
+    {% for item in order['items'] %}
+        <input type="text" value="{{item['item']}}">
+        <input type="text" value="{{item['quantity']}}">
+        <input style="grid-column: 3 / span 2" type="text" value="{{item['custom']}}">
+    {% endfor %}
+    <button type="submit" name="action" value="Issue">Issued</button>
+    </form>
