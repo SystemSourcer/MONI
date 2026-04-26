@@ -21,7 +21,9 @@
       <input type="datetime-local" name="end" id="end" required>
       <select id="type" name="type">
         <option value="out_all">Output (all)</option>
-        <option value="order">Order (only)</option>
+        <option value="order_all">Order (all)</option>
+        <option value="order_stage_1">Order (stage_1)</option>
+        <option value="order_stage_3">Order (stage_3)</option>
         <option value="output">Output (only)</option>
         <option value="return">Return (only)</option>
         <option value="input">Input</option>
@@ -84,10 +86,12 @@
       const end = document.getElementById('end').value;
       const type_string = document.getElementById('type').value;
       let type_array
-      if (type_string === 'out_all'){
-        type_array = ['order','output','return'];
+      if (type_string === 'order_all'){
+        type_array = ['order_stage_1','order_stage_3'];
+      } else if (type_string === 'out_all'){
+        type_array = ['order_stage_1','order_stage_3','output','return'];
       } else if (type_string === 'all'){
-        type_array = ['order','output','return', 'input'];
+        type_array = ['order_stage_1','order_stage_3','output','return', 'input'];
       } else {
         type_array = [type_string];
       }

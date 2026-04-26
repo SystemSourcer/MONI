@@ -19,7 +19,7 @@
         {% endif %}
       {% endfor %}
     </form>
-    <form id="OutputForm" method="post" action="output">
+    <form id="OutputForm" method="post" action="/output">
       <label>Item:</label>
       <label>Quantity:</label>
       <label>Price in €:</label>
@@ -30,27 +30,31 @@
       <input type="text" name="total" value="0" readonly>
       <button type="submit" name="category" value={{category}}>Give Out</button>
     </form>
-    {% for order in assigned_order_list %}
-      <h2>Order for place {{ order['place'] }}:</h2>
-      <form method="post" action="/issue">
+    {% for i in range(assigned_order_list|length) %}
+      <h2>Order number {{ assigned_order_key_list[i] }} for place {{ assigned_order_list[i]['place'] }}:</h2>
+      <form method="post" action="/prepared">
+        <input type="hidden" name="order_key" value="{{ assigned_order_key_list[i] }}">
         <label  for="negotiator"> Ordered from:</label>
-        <input type="text" value="{{ order['negotiator'] }}" readonly>
+        <input type="text" value="{{ assigned_order_list[i]['negotiator'] }}" readonly>
         <label for="order-time">Ordred at:</label>
-        <input type="text" value="{{ order['ordered'] }}" readonly>
+        <input type="text" value="{{ assigned_order_list[i]['ordered'] }}" readonly>
         <label  for="issuer"> Issued from:</label>
-        <input type="text" value="{{ order['issuer'] }}" readonly>
+        <input type="text" value="{{ assigned_order_list[i]['issuer'] }}" readonly>
         <label for="issue-time">Issued at:</label>
-        <input type="text" value="{{ order['Issued'] }}" readonly>
+        <input type="text" value="{{ assigned_order_list[i]['issued'] }}" readonly>
         <hr id="hrForm">
         <label>Item:</label>
         <label>Quantity:</label>
         <label style="grid-column: 3 / span 2">Custom:</label>
-        {% for item in order['items'] %}
+        {% for item in assigned_order_list[i]['items'] %}
             <input type="text" value="{{item['item']}}">
             <input type="text" value="{{item['quantity']}}">
             <input style="grid-column: 3 / span 2" type="text" value="{{item['custom']}}">
         {% endfor %}
-        <button type="submit" name="action" value="Issue">Issued</button>
+        <span class="grid-spacer"></span> 
+        <span class="grid-spacer"></span> 
+        <span class="grid-spacer"></span> 
+        <button type="submit" name="category" value={{category}}>Prepared</button>
       </form>
     {% endfor %}
     <script>

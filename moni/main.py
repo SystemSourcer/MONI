@@ -46,7 +46,7 @@ try:
     
     order_history = {int(k): v for k, v in order_history.items()} # because key are strings after loding but int wen createt thru the system
 
-except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':2},{'category':'Init_1', 'item':'Init_1', 'quantitiy':1},{'category':'Init_2', 'item':'Init_2', 'quantitiy':3}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
+except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':'2', 'custom':'No real Order'},{'category':'Init_1', 'item':'Init_1', 'quantitiy':'1', 'custom':'No real Order'},{'category':'Init_2', 'item':'Init_2', 'quantitiy':'3', 'custom':'No real Order'}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
 
 print('Inventory:',inventory)
 print('Log_Flow:',flow_log)
@@ -185,16 +185,17 @@ async def place_management_post(request: Request, place: str = Form(...)):
 def output(request: Request, category: str):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    assigned_order_list = [order for order in order_history.values() if order["issuer"] != None and order["prepared"]== None and order['category'] == category]
+    assigned_order_key_list = [key for key, order in order_history.items() if order["issuer"] != None and order["prepared"]== None and order['category'] == category]
+    assigned_order_list = [order_history[order_key] for order_key in assigned_order_key_list]
     print(assigned_order_list)
-    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "assigned_order_list": assigned_order_list})
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "assigned_order_key_list":assigned_order_key_list, "assigned_order_list": assigned_order_list})
 
 @app.post("/output")
 async def output_post(request: Request):
     form = await request.form()
     print(form)
     category = form.get("category")
-
+    print(category)
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
@@ -224,8 +225,35 @@ async def output_post(request: Request):
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
+@app.post("/prepared")
+async def prepared_post(request: Request):
+    form = await request.form()
+    print(form)
+
+    order_key = int(form.get("order_key"))
+    category = form.get("category")
+    print(category)
+
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+
+    order = order_history[order_key]
+    order['organizer'] = user
+    order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+
+    cat_param = quote_plus(category)
+    response = RedirectResponse(url=f"/output?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
+
+
+
 @app.get("/return")
-def output(request: Request, category: str):
+def output_return(request: Request, category: str):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
     return templates.TemplateResponse(request, "return.html", {"category":category, "assortment": inventory[category]})
@@ -338,16 +366,62 @@ def issue(request:Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
     if not role: return RedirectResponse(url="/login")
-    issuer_order_list = [order for order in order_history.values() if order["issuer"] == user]
-    if issuer_order_list: return templates.TemplateResponse(request,"issue.html", {"order": issuer_order_list[0]})
-    for o in order_history.values():
+    issuer_order_list = [key for key, order in order_history.items() if order['issuer'] == user and order['issued'] == None]
+    if issuer_order_list: return templates.TemplateResponse(request,"issue.html", {"order_key": issuer_order_list[0], "order": order_history[issuer_order_list[0]]})
+    order_key = 0
+    for k,o in order_history.items():
         if o['issuer'] == None: 
             o['issuer'] = user
-            next_order = o
+            order_key = k
             break
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
-    return templates.TemplateResponse(request,"issue.html", {"order": next_order })
+    return templates.TemplateResponse(request,"issue.html", {"order_key":order_key, "order": order_history[order_key]})
+
+@app.post("/issue")
+async def issue_post(request: Request):
+    form = await request.form()
+    print(form)
+
+    order_key = int(form.get("order_key"))
+
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+
+    for field_name, value in form.items():
+        if 'category' in field_name:
+            n = int(next(reversed(flow_log)))
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':value}
+
+        elif 'item' in field_name:
+            flow_log[n+1]['item'] = value
+
+        elif 'quantity' in field_name: 
+            flow_log[n+1]['quantity'] = value
+            for idl in inventory.values():
+                for id in idl:
+                    if id['item'] in field_name: id['quantity'] -= int(value)
+
+        elif 'price' in field_name:
+            flow_log[n+1]['price'] = 0
+    
+    order = order_history[order_key]
+    if order['prepared'] == None: order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    order['issued'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
+    with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
+        json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+
+    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+
+    response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
 # This is the last line of the Code :)
