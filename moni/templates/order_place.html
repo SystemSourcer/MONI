@@ -11,10 +11,10 @@
     <h1>Order: Place</h1>
     <h2>Select the destination of the Order to proceed.</h2>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form class="tabel-grid"  method="post" action="/order_place">
-      {% for tabel, value in tabel_dict.items() %}
+    <form class="place-grid"  method="post" action="/order_place">
+      {% for place, value in place_dict.items() %}
         {% if value %} 
-          <button style="background: #32df07; font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="tabel", value="{{tabel}}">{{tabel}}</button>
+          <button style="background: #32df07; font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="place", value="{{place}}">{{place}}</button>
         {% else %}
           <span class="grid-spacer"></span> 
         {% endif %}

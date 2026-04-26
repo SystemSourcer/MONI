@@ -13,16 +13,18 @@ app.mount("/static", StaticFiles(directory="moni/static"), name="static")
 templates = Jinja2Templates(directory="./moni/templates")
 
 role_dict = {
-    'admin': {'password': '887375daec62a9f02d32a63c9e14c7641a9a8a42e4fa8f6590eb928d9744b57bb5057a1d227e4d40ef911ac030590bbce2bfdb78103ff0b79094cee8425601f5'},
-    'worker': {'password': 'c6001d5b2ac3df314204a8f9d7a00e1503c9aba0fd4538645de4bf4cc7e2555cfe9ff9d0236bf327ed3e907849a98df4d330c4bea551017d465b4c1d9b80bcb0'},
+    'master': {'password': '887375daec62a9f02d32a63c9e14c7641a9a8a42e4fa8f6590eb928d9744b57bb5057a1d227e4d40ef911ac030590bbce2bfdb78103ff0b79094cee8425601f5'},
+    'organizer': {'password': '90fbf0437ab78f1225d82922259cc59006d6f2da2b6ea775bb5e3d69e333c64fb64d0d1c534b6bf2c335fff54f036a4fe195ab95d74434c6ee7720a75c27ece0'},
+    'negotiator': {'password': '5cfaeeaacc1626610030d4c4f2a701d2aba37fb28d5d861ab29707e5c9e4d0b6883abba4887ae9460bdd37195576a9eacf389948e2d295ef82b5ce59d63115f1'},
+    'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
-tabel_dict = {}
+place_dict = {}
 for letter in ['A','B','C','D','E','F','G','H']:
     for number in range(10):
-        tabel_dict[letter+str(number)]=False
+        place_dict[letter+str(number)]=False
 
-order_temp_list = [],
+order_temp_list = []
 
 try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
@@ -38,9 +40,17 @@ try:
 
 except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'price': '0'}} # need init entry becaus counts with last entry...
 
-print(inventory)
-print(flow_log)
+try:
+    with open("/workspace/data/order_histroy.json", "r", encoding="utf-8") as order_history_file:
+        order_history = json.load(order_history_file)
+    
+    order_history = {int(k): v for k, v in flow_log.items()} # because key are strings after loding but int wen createt thru the system
 
+except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':2},{'category':'Init_1', 'item':'Init_1', 'quantitiy':1},{'category':'Init_2', 'item':'Init_2', 'quantitiy':3}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
+
+print('Inventory:',inventory)
+print('Log_Flow:',flow_log)
+print('Oder_History:',order_history)
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse("/workspace/moni/static/favicon.ico")
@@ -146,20 +156,20 @@ async def set_price_post(request: Request):
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
-@app.get("/tabel_management")
-def tabel_management(request: Request):
+@app.get("/place_management")
+def place_management(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request, "tabel_management.html", {"tabel_dict": tabel_dict})
+    return templates.TemplateResponse(request, "place_management.html", {"place_dict": place_dict})
 
-@app.post("/tabel_management") 
-async def tabel_management_post(request: Request, tabel: str = Form(...)):
-    if tabel_dict[tabel] == True: tabel_dict[tabel] = False
-    else: tabel_dict[tabel] = True
+@app.post("/place_management") 
+async def place_management_post(request: Request, place: str = Form(...)):
+    if place_dict[place] == True: place_dict[place] = False
+    else: place_dict[place] = True
     
     role = request.cookies.get("role")
     user = request.cookies.get("user")
-    response = RedirectResponse(url="/tabel_management", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url="/place_management", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
@@ -180,7 +190,6 @@ async def output_post(request: Request):
     user = request.cookies.get("user")
 
     for field_name, value in form.items():
-        print(flow_log)
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
             flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'output', 'role':role, 'user': user, 'category':category, 'item':value}
@@ -222,7 +231,6 @@ async def return_post(request: Request):
     user = request.cookies.get("user")
 
     for field_name, value in form.items():
-        print(flow_log)
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
             flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'return', 'role':role, 'user': user, 'category':category, 'item':value}
@@ -257,11 +265,11 @@ def balance_sheet(request: Request):
 def order_place(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request,"order_place.html", {"tabel_dict": tabel_dict})
+    return templates.TemplateResponse(request,"order_place.html", {"place_dict": place_dict})
 
 @app.post("/order_place") 
-async def order_place_post(request: Request, tabel: str = Form(...)):
-    return templates.TemplateResponse(request,"order_goods.html", {"inventory": inventory, "tabel": tabel})
+async def order_place_post(request: Request, place: str = Form(...)):
+    return templates.TemplateResponse(request,"order_goods.html", {"inventory": inventory, "place": place})
 
 @app.post("/order_goods")
 async def order_goods_post(request: Request):
@@ -271,23 +279,37 @@ async def order_goods_post(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
+    itemwise_order_list = []
     for field_name, value in form.items():
-        print(flow_log)
+        
         if 'category' in field_name:
             n = int(next(reversed(flow_log)))
             flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_1', 'role':role, 'user': user, 'category':value}
+            itemwise_order = dict()
+            itemwise_order['category'] = value
 
         elif 'item' in field_name:
             flow_log[n+1]['item'] = value
+            itemwise_order['item'] = value
 
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = 0
+            itemwise_order['quantity'] = value
+            itemwise_order_list.append(itemwise_order)
 
         elif 'price' in field_name:
             flow_log[n+1]['price'] = value 
 
-    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
-        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+    for key in inventory.keys():
+        n = int(next(reversed(order_history)))
+        catwise_order = []
+        for itemwise_order in itemwise_order_list:
+            if itemwise_order['category'] == key: catwise_order.append(itemwise_order)
+        
+        order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':False, 'issued': False}
+
+    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
     with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
         json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)

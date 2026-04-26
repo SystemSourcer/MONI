@@ -10,17 +10,19 @@
     <div class="icon-moni"><h1>MONI<h1></div>
     <h1>Welcome to MONI</h1>
     <h2>MONI is the Main Organisational Networking Interface</h2>
-    <p>Please log in as Admin or Worker</p>
-    <p>Hint: If you do not know what you are, then you are a Worker</p>
+    <p>Please log in as the corresponding role. </p>
+    <p>Hint: If you do not know what you are, then you are a Issuer</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="post" action="/login">
-      <label for="role">Role (Admin / Worker):</label>
+      <label for="role">Role:</label>
       <label for="user">User:</label>
       <label for="password">Passwort:</label>
       <span class="grid-spacer"></span> 
       <select id="role" name="role">
-        <option value="worker">Worker</option>
-        <option value="admin">Admin</option>
+        <option value="master">Master</option>
+        <option value="organizer">Organizer</option>
+        <option value="negotiator">Negotiator</option>
+        <option value="issuer">Issuer</option>
       </select>
       <input id="user" name="user" required>
       <input id="password" name="password" type="password" required>
