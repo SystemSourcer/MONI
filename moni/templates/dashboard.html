@@ -23,42 +23,40 @@
       {% if role == "negotiator" or role == "master" %}
         <button type="button" onclick="window.location.href='/order_place'">Order</button>
       {% endif %}
+      <button type="button" onclick="window.location.href='/issue'">Issue</button>
       <button type="button" onclick="window.location.href='/logout'">Logout</button>
     </form>
-    {% if (role == "organizer") or role == "negotiator" or role == "master" %}
       <h2>Inventory:</h2>
       {% for category, idl in inventory.items() %}
-      <form method="post" action="/dashboard">
-        <label style="grid-column: 1 / span 2;" for="category">{{ category }}</label>
-        <input type="hidden" name="category" id="category" value="{{ category }}">
-        <button type="submit" name="action" value="Output">Output</button>
-        <button type="submit" name="action" value="Return">Return</button>
-      </form>
-      <table>
-          <thead>
-              <tr>
-              {% for key in idl[0].keys() %}
-                  <th>{{ key }}</th>
+        <form method="post" action="/dashboard">
+          <label style="grid-column: 1 / span 2;" for="category">{{ category }}</label>
+          <input type="hidden" name="category" id="category" value="{{ category }}">
+          {% if (role == "organizer") or role == "master" %}
+            <button type="submit" name="action" value="Output">Output</button>
+            <button type="submit" name="action" value="Return">Return</button>
+          {% endif %}
+        </form>
+        <table>
+            <thead>
+                <tr>
+                {% for key in idl[0].keys() %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for id in idl %}
+                <tr>
+                {%for value in id.values()%}
+                  <td>
+                  {{value}}
+                  </td>
                 {% endfor %}
-              </tr>
-          </thead>
-          <tbody>
-          {% for id in idl %}
-              <tr>
-              {%for value in id.values()%}
-                <td>
-                {{value}}
-                </td>
-              {% endfor %}
-              </tr>
-          {% endfor %}
-          </tbody>
-      </table>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
       {% endfor %}
-    {% endif %}
-    {% if role == "issuer" %}
-      <h2>Order:</h2>
-    {% endif %}
     <script>
       var element = document.body;
       if (window.sessionStorage.getItem('Mode') === 'dark') {

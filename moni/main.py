@@ -41,10 +41,10 @@ try:
 except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'price': '0'}} # need init entry becaus counts with last entry...
 
 try:
-    with open("/workspace/data/order_histroy.json", "r", encoding="utf-8") as order_history_file:
+    with open("/workspace/data/order_history.json", "r", encoding="utf-8") as order_history_file:
         order_history = json.load(order_history_file)
     
-    order_history = {int(k): v for k, v in flow_log.items()} # because key are strings after loding but int wen createt thru the system
+    order_history = {int(k): v for k, v in order_history.items()} # because key are strings after loding but int wen createt thru the system
 
 except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':2},{'category':'Init_1', 'item':'Init_1', 'quantitiy':1},{'category':'Init_2', 'item':'Init_2', 'quantitiy':3}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
 
@@ -77,7 +77,7 @@ def login_post(request: Request, role: str = Form(...), user: str = Form(...), p
 def dashboard(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
-    if not role: return RedirectResponse(url="/login")
+    if not role: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request, "dashboard.html", {"role": role, "user": user, "inventory":inventory})
 
 @app.post("/dashboard")
@@ -89,6 +89,10 @@ def dashboard_post(request: Request, category: str = Form(...), action: str = Fo
     if action == "Return":
         response = RedirectResponse(url=f"/return?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
 
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
 @app.get("/logout")
@@ -149,6 +153,9 @@ async def set_price_post(request: Request):
             for id in idl:
                 if id['item'] == field_name: id['price'] = value
     
+    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
     role = request.cookies.get("role")
     user = request.cookies.get("user")
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
@@ -178,7 +185,9 @@ async def place_management_post(request: Request, place: str = Form(...)):
 def output(request: Request, category: str):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category]})
+    assigned_order_list = [order for order in order_history.values() if order["issuer"] != None and order["prepared"]== None and order['category'] == category]
+    print(assigned_order_list)
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "assigned_order_list": assigned_order_list})
 
 @app.post("/output")
 async def output_post(request: Request):
@@ -295,10 +304,14 @@ async def order_goods_post(request: Request):
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = 0
             itemwise_order['quantity'] = value
-            itemwise_order_list.append(itemwise_order)
+            
 
         elif 'price' in field_name:
             flow_log[n+1]['price'] = value 
+
+        elif 'custom' in field_name:
+            itemwise_order['custom'] = value
+            itemwise_order_list.append(itemwise_order)
 
     for key in inventory.keys():
         n = int(next(reversed(order_history)))
@@ -306,7 +319,7 @@ async def order_goods_post(request: Request):
         for itemwise_order in itemwise_order_list:
             if itemwise_order['category'] == key: catwise_order.append(itemwise_order)
         
-        order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':False, 'issued': False}
+        order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':None, 'issued': None}
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
@@ -320,4 +333,21 @@ async def order_goods_post(request: Request):
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
+@app.get("/issue")
+def issue(request:Request):
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+    if not role: return RedirectResponse(url="/login")
+    issuer_order_list = [order for order in order_history.values() if order["issuer"] == user]
+    if issuer_order_list: return templates.TemplateResponse(request,"issue.html", {"order": issuer_order_list[0]})
+    for o in order_history.values():
+        if o['issuer'] == None: 
+            o['issuer'] = user
+            next_order = o
+            break
+
+    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+
+    return templates.TemplateResponse(request,"issue.html", {"order": next_order })
 # This is the last line of the Code :)
