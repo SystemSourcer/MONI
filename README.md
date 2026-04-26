@@ -28,6 +28,7 @@ So far MONI works with a quit basic and simple password handling.
 The Passwords for Admin and Worker are saved directly in the python file as hashed srings. 
 You can create a new password with:
 ```python
+import hashlib
 print(hashlib.sha512(('Your_PW').encode()).hexdigest())
 ```
 Then replace the hashed string in the python file with it to update the password.
