@@ -1,5 +1,9 @@
-# MONI
-This is MONI, the Main Organsisational Networking Interface
+
+# MONI 
+This is MONI, the Main Organsisational Networking Interface  
+
+# Logo / Icon
+![Icon](moni/static/favicon.ico)  
 
 ## Descibtion
 MONI originally came about from the idea of creating a sort of “[Kassenka](https://play.google.com/store/apps/details?id=com.ankele.kassenka&hl=de)” version for the computer.  
@@ -7,12 +11,10 @@ However, even shortly after development began, the thinking went beyond this ini
 Instead of using [Tkinter](https://docs.python.org/fr/3/library/tkinter.html) to design a local GUI, the decision was made to to work with HTML.  
 This enabels a multi-user environment within a local network. 
 
-
-
 ## Getting Started
 
 ### Build Docker image:
-Open a terminal in the cloed Git repo folder or cd in it.  
+Open a terminal in the cloned Git repo folder or cd in it.  
 Then execute:  
 ```bash
 docker build -t moni ./
@@ -39,7 +41,7 @@ uvicorn moni.main:app --reload --host 0.0.0.0
 ```
 
 ## Authors
-This project was developed by SystemSourcer.
+This project / repo was developed by SystemSourcer.
 
 ## License (LRU)
 The entire project is under a LRU  (limited right of use) License. 
