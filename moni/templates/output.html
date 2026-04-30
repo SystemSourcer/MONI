@@ -14,8 +14,8 @@
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form class="button-grid">
       {% for item_dict in assortment %}
-        {% if item_dict['quantity'] > 0 %}
-          <button  style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, dataset.quantity, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+        {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
+          <button  style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
         {% endif %}
       {% endfor %}
     </form>
@@ -66,7 +66,7 @@
       document.getElementById("giveOut").disabled = true;
   
       
-    function clickButton(name, max_quantity, pricePerUnit) {
+    function clickButton(name, max_quantity, ordered, pricePerUnit) {
       const form = document.getElementById('OutputForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
       let item = document.querySelector(`input[name="${name}_item"]`);
@@ -84,7 +84,7 @@
         quantity.name = `${name}_quantity`;  
         quantity.value = "0";
         quantity.min = "1";
-        quantity.max = max_quantity;
+        quantity.max = max_quantity - ordered;
         quantity.step = "1";
         price = document.createElement('input');
         price.type = 'text';
@@ -122,7 +122,7 @@
       }
       // Wert erhöhen
       const current = parseInt(quantity.value || "0", 10);
-      quantity.value = Math.min(current + 1, parseInt(max_quantity));
+      quantity.value = Math.min(current + 1, parseInt(max_quantity) - parseInt(ordered));
 
       const q = parseFloat(quantity.value);
       price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
