@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Place Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Place Management</h1>
+    <h2>Here you can enabel / disabel places, for possible orders.</h2>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form class="place-grid"  method="post" action="/place_management">
+      {% for place, value in place_dict.items() %}
+        {% if value %} 
+          <button style="background: #32df07; font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="place", value="{{place}}">{{place}}</button>
+        {% else %}
+          <button style="font-size : 1.5dvw; width: 8dvw; height: 9dvh;" type="submit" name="place", value="{{place}}">{{place}}</button>
+        {% endif %}
+      {% endfor %}
+    </form>
+  </body>
+  <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+  </script>
+</html>

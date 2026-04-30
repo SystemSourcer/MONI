@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Balance Sheet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Balance Sheet</h1>
+    <h2>Here you can make your balance.</h2>
+    <p>Set the Filter options for the balance.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form id="balanceFilter">
+      <label>From:</label>
+      <label>Up to:</label>
+      <label>Type</label>
+      <span class="grid-spacer"></span> 
+      <input type="datetime-local" name="start" id="start" required>
+      <input type="datetime-local" name="end" id="end" required>
+      <select id="type" name="type">
+        <option value="out_all">Output (all)</option>
+        <option value="order_all">Order (all)</option>
+        <option value="order_stage_1">Order (stage_1)</option>
+        <option value="order_stage_3">Order (stage_3)</option>
+        <option value="output">Output (only)</option>
+        <option value="return">Return (only)</option>
+        <option value="input">Input</option>
+        <option value="all">All</option>
+      </select>
+      <span class="grid-spacer"></span> 
+      <label>Category:</label>
+      <label>Item:</label>
+      <span class="grid-spacer"></span> 
+      <span class="grid-spacer"></span> 
+      <input name="category" id="category">
+      <input name="item" id="item">
+      <span class="grid-spacer"></span> 
+      <button type="submit">Make Balance</button>
+    </form>
+    <div id="flow-log-data"
+     data-flow-log='{{ flow_log | tojson | safe }}'>
+    </div>
+    <h2>Balance:</h2>
+    <table id="balance-table">
+      <thead>
+          <tr>
+            {% for key in flow_log[0].keys() %}
+              <th style="text-align: center;">{{ key }}</th>
+            {% endfor %}
+          </tr>
+      </thead>
+      <tbody id="balance-body">
+      </tbody>
+      <tfoot id="balance-foot">
+        <tr id="sumrow">
+          {% for key in flow_log[0].keys() %}
+            <th id="sum{{key}}" style="text-align: center;"></th>
+          {% endfor %}
+          <th style="text-align: center;">Summe</th>
+        </tr>
+      </tfoot>
+    </table>
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+
+    function isnumvalue(text) {
+      if (!text) return false;
+      // Dezimal-Komma in Dezimal-Punkt umwandeln
+      text = text.replace(',', '.').trim();
+      return !isNaN(text) && text !== '';
+    }
+
+    function parsenum(text) {
+      return parseFloat(text.replace(',', '.')) || 0;
+    }
+
+    document.getElementById('balanceFilter').addEventListener('submit', function (event) {
+      event.preventDefault(); // prevents the actual/real submission/reload
+      console.log("Submit-Handler wurde aufgerufen");
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+      const type_string = document.getElementById('type').value;
+      let type_array
+      if (type_string === 'order_all'){
+        type_array = ['order_stage_1','order_stage_3'];
+      } else if (type_string === 'out_all'){
+        type_array = ['order_stage_1','order_stage_3','output','return'];
+      } else if (type_string === 'all'){
+        type_array = ['order_stage_1','order_stage_3','output','return', 'input'];
+      } else {
+        type_array = [type_string];
+      }
+      const cat = document.getElementById('category').value;
+      const item = document.getElementById('item').value;
+      const elem = document.getElementById("flow-log-data");
+      const flow_log = JSON.parse(elem.dataset.flowLog); // here correct because from html to js data-flow-log turns to elem.dataset.flowLog
+      const theadThs = document.querySelectorAll('#balance-table thead th');
+      const columns = Array.from(theadThs).map(th => th.textContent.trim());
+      const tbody = document.getElementById('balance-body');
+      const tfoot = document.getElementById('balance-foot');
+      tbody.innerHTML = "";  // alten Inhalt löschen
+      flowLogLoop:
+      for (const [id, eintrag] of Object.entries(flow_log)){
+        const tr = document.createElement('tr');
+        for (const col of columns){
+          if (col === 'type' && !type_array.includes(eintrag[col])){
+            continue flowLogLoop
+          }
+          if (cat !=='' && col === 'category' && eintrag[col] !== cat){
+            continue flowLogLoop
+          }
+          if (item !=='' && col === 'item' && eintrag[col] !== item){
+            continue flowLogLoop
+          }
+          const td = document.createElement('td');
+          td.style.textAlign = 'center'
+          td.textContent = eintrag[col] ?? "";  // falls ein Feld mal fehlt
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      for (let col = 0; col < columns.length; col++){
+        let sum = 0;
+        let onlynum = true;
+        for (let row = 0; row < tbody.rows.length; row++){
+          const zelle = tbody.rows[row].cells[col];
+          if (!zelle) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+          const text = zelle.textContent.trim();
+          if (text === '') continue; // ignore empy cells
+          if (!isnumvalue(text)) {
+            onlynum = false;
+            break; // do not sum cols with text
+          }
+          sum += parsenum(text);
+        }
+        const targetcell =  tfoot.rows[0].cells[col];
+        if (!targetcell) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+        if (onlynum){
+          targetcell.textContent = sum.toFixed(2);
+        } else {
+          targetcell.textContent = "---" ;// --- sring in not only number cols
+        }
+      }
+    });
+    </script>
+  </body>
+</html>

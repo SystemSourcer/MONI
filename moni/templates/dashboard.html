@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <div class="icon-dark" onclick="setDMode()"><h1>Dark<h1></div>
+    <h1>Hello {{ user }}, your role is "{{ role }}"</h1>
+    <p>Following functions are available:</p>
+    <form class="button-grid">
+      {% if role == "master" %}
+        <button type="button" onclick="window.location.href='/place_management'">Place Management</button>
+        <button type="button" onclick="window.location.href='/balance_sheet'">Balance Sheet</button>
+      {% endif %}
+      {% if (role == "organizer") or (role == "master") %}
+        <button type="button" onclick="window.location.href='/input'">Input</button>
+        <button type="button" onclick="window.location.href='/set_price'">Set Price</button>
+      {% endif %}
+      {% if role == "negotiator" or role == "master" %}
+        <button type="button" onclick="window.location.href='/order_place'">Order</button>
+      {% endif %}
+      <button type="button" onclick="window.location.href='/issue'">Issue</button>
+      <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    </form>
+      <h2>Inventory:</h2>
+      {% for category, idl in inventory.items() %}
+        <form method="post" action="/dashboard">
+          <label style="grid-column: 1 / span 2;" for="category">{{ category }}</label>
+          <input type="hidden" name="category" id="category" value="{{ category }}">
+          {% if (role == "organizer") or role == "master" %}
+            <button type="submit" name="action" value="Output">Output</button>
+            <button type="submit" name="action" value="Return">Return</button>
+          {% endif %}
+        </form>
+        <table>
+            <thead>
+                <tr>
+                {% for key in idl[0].keys() %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for id in idl %}
+                <tr>
+                {%for value in id.values()%}
+                  <td>
+                  {{value}}
+                  </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+      {% endfor %}
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+      function setDMode() {
+        if (window.sessionStorage.getItem('Mode') === 'dark') {
+          window.sessionStorage.setItem('Mode', 'white')
+        } else {
+          window.sessionStorage.setItem('Mode', 'dark')
+        }
+        element.classList.toggle("dark-mode")
+      }
+    </script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 # LRU - License (limited right of use)
-Copyright (c) 2026 SystemSourcer
-
+Copyright (c) 2026 SystemSourcer  
 ## License Grant:  
+All rights reserved, with the following exceptions:  
 End users are granted a simple, revocable,
 non-transferable license to use this software
 exclusively for private, non-commercial purposes.
