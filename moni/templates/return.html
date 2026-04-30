@@ -26,14 +26,16 @@
       <span class="grid-spacer"></span> 
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="submit" name="category" value={{category}}>Take back</button>
+      <button type="submit" id="takeBack" name="category" value={{category}}>Take back</button>
     </form>
     <script>
       var element = document.body;
       if (window.sessionStorage.getItem('Mode') === 'dark') {
         element.classList.toggle("dark-mode");
       }
-      
+      document.querySelector(`input[name="total"]`).value = "0"
+      document.getElementById("takeBack").disabled = true;
+
     function clickButton(name, pricePerUnit) {
       const form = document.getElementById('OutputForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
@@ -65,6 +67,7 @@
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
         form.insertBefore(gridSpacer, hrForm);
+        document.getElementById("takeBack").disabled = false;
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 

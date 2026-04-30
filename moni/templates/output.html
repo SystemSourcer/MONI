@@ -28,7 +28,7 @@
       <span class="grid-spacer"></span> 
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="submit" name="category" value={{category}}>Give Out</button>
+      <button type="submit" id="giveOut" name="category" value={{category}}>Give Out</button>
     </form>
     {% for i in range(assigned_order_list|length) %}
       <h2>Order number {{ assigned_order_key_list[i] }} for place {{ assigned_order_list[i]['place'] }}:</h2>
@@ -62,6 +62,9 @@
       if (window.sessionStorage.getItem('Mode') === 'dark') {
         element.classList.toggle("dark-mode");
       }
+      document.querySelector(`input[name="total"]`).value = "0"
+      document.getElementById("giveOut").disabled = true;
+  
       
     function clickButton(name, max_quantity, pricePerUnit) {
       const form = document.getElementById('OutputForm');
@@ -94,6 +97,7 @@
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
         form.insertBefore(gridSpacer, hrForm);
+        document.getElementById("giveOut").disabled = false;
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 

@@ -29,13 +29,15 @@
       <span class="grid-spacer"></span> 
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="submit">Order</button>
+      <button type="submit" id="order">Order</button>
     </form>
     <script>
       var element = document.body;
       if (window.sessionStorage.getItem('Mode') === 'dark') {
         element.classList.toggle("dark-mode");
       }
+      document.querySelector(`input[name="total"]`).value = "0"
+      document.getElementById("order").disabled = true;
 
     function clickButton(cat, name, max_quantity, pricePerUnit) {
       const form = document.getElementById('OrderForm');
@@ -74,6 +76,7 @@
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
         form.insertBefore(custom, hrForm)
+        document.getElementById("order").disabled = false;
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 

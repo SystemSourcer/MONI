@@ -11,6 +11,11 @@
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Issue: {{order['category']}}</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post" action="/issue">
+    <button type="submit" name="action" value="Issue_Last">Reopen Last Issue</button>
+    </form>
+
     <h2>Order number {{ order_key }} for place {{ order['place'] }}:</h2>
     <form method="post" action="/issue">
       <input type="hidden" name="order_key" value="{{ order_key }}">
@@ -32,10 +37,11 @@
           <input type="text" name="{{item['item']}}_quantity" value="{{item['quantity']}}">
           <input style="grid-column: 3 / span 2" type="text" name="{{item['item']}}_custom" value="{{item['custom']}}">
       {% endfor %}
-      <span class="grid-spacer"></span> 
-      <span class="grid-spacer"></span> 
-      <span class="grid-spacer"></span> 
-      <button type="submit" name="action" value="Issue">Issued</button>
+      {% if order_key != 0 %}
+        <button type="submit" name="action" value="Issue_Dashboard">Issued Dashboard</button>
+        <span class="grid-spacer"></span> 
+        <button style="grid-column: 3 / span 2" type="submit" name="action" value="Issue_Next">Issued Next</button>
+      {% endif %}
     </form>
     <script>
         var element = document.body;

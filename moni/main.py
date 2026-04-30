@@ -250,8 +250,6 @@ async def prepared_post(request: Request):
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
-
-
 @app.get("/return")
 def output_return(request: Request, category: str):
     role = request.cookies.get("role")
@@ -267,6 +265,7 @@ async def return_post(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
+    
     for field_name, value in form.items():
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
@@ -385,43 +384,71 @@ async def issue_post(request: Request):
     form = await request.form()
     print(form)
 
-    order_key = int(form.get("order_key"))
+    action = form.get("action")
 
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
-    for field_name, value in form.items():
-        if 'category' in field_name:
-            n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':value}
-
-        elif 'item' in field_name:
-            flow_log[n+1]['item'] = value
-
-        elif 'quantity' in field_name: 
-            flow_log[n+1]['quantity'] = value
-            for idl in inventory.values():
-                for id in idl:
-                    if id['item'] in field_name: id['quantity'] -= int(value)
-
-        elif 'price' in field_name:
-            flow_log[n+1]['price'] = 0
+    if action == "Issue_Last":
+        last_issue_key = [key for key, i in order_history.items() if i['issuer'] == user and i['issued'] != None ][-1]
+        order_history[last_issue_key]['issued'] = None
+        response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
     
-    order = order_history[order_key]
-    if order['prepared'] == None: order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
-    order['issued'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    else:   
+        order_key = int(form.get("order_key"))
+        for field_name, value in form.items():
+            if 'category' in field_name:
+                n = int(next(reversed(flow_log)))
+                flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':value}
 
-    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
-        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+            elif 'item' in field_name:
+                flow_log[n+1]['item'] = value
 
-    with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
-        json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+            elif 'quantity' in field_name: 
+                flow_log[n+1]['quantity'] = value
+                for idl in inventory.values():
+                    for id in idl:
+                        if id['item'] in field_name: id['quantity'] -= int(value)
 
-    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
-        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+            elif 'price' in field_name:
+                flow_log[n+1]['price'] = 0
+        
+        order = order_history[order_key]
+        if order['prepared'] == None: order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+        order['issued'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
-    response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
+        with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+            json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
+        with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
+            json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+
+        with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+            json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+
+    if action == "Issue_Next": response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
+    elif action == "Issue_Dashboard": response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # This is the last line of the Code :)
