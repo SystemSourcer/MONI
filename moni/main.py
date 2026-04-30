@@ -115,7 +115,7 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     if category not in inventory.keys(): inventory[category] = list()
     
     if item not in [id['item'] for id in inventory[category]]:
-        inventory[category].append({'item':item,'quantity':0,'price': 0})
+        inventory[category].append({'item':item,'quantity':0,'ordered':0,'price':0})
 
     for id in inventory[category]:
         if id['item'] == item:
@@ -331,8 +331,10 @@ async def order_goods_post(request: Request):
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = 0
             itemwise_order['quantity'] = value
+            for idl in inventory.values():
+                for id in idl:
+                    if id['item'] in field_name: id['ordered'] += int(value)
             
-
         elif 'price' in field_name:
             flow_log[n+1]['price'] = value 
 
@@ -351,8 +353,13 @@ async def order_goods_post(request: Request):
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
+    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
     with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
         json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+
+    
 
   
     response = RedirectResponse(url=f"/order_place", status_code=status.HTTP_303_SEE_OTHER)
@@ -392,6 +399,16 @@ async def issue_post(request: Request):
     if action == "Issue_Last":
         last_issue_key = [key for key, i in order_history.items() if i['issuer'] == user and i['issued'] != None ][-1]
         order_history[last_issue_key]['issued'] = None
+        if order_history[last_issue_key]['prepared'] == 'auto_issue_log': order_history[last_issue_key]['prepared'] = None
+
+        n = int(next(reversed(flow_log)))
+        for item in order_history[last_issue_key]['items']:
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':item['category'], 'item':item['item'], 'quantity':- int(item['quantity']), 'price':0}
+            for id in inventory[item['category']]:
+                if id['item'] == item['item']:
+                        id['quantity'] += int(item['quantity'])
+                        id['ordered'] += int(item['quantity'])
+
         response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
     
     else:   
@@ -408,23 +425,22 @@ async def issue_post(request: Request):
                 flow_log[n+1]['quantity'] = value
                 for idl in inventory.values():
                     for id in idl:
-                        if id['item'] in field_name: id['quantity'] -= int(value)
-
-            elif 'price' in field_name:
-                flow_log[n+1]['price'] = 0
+                        if id['item'] in field_name: 
+                            id['quantity'] -= int(value)
+                            id['ordered'] -= int(value)
         
         order = order_history[order_key]
-        if order['prepared'] == None: order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+        if order['prepared'] == None: order['prepared'] = 'auto_issue_log'
         order['issued'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
-        with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
-            json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
+        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
 
-        with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
-            json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
+    with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
+        json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
 
-        with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
-            json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
+    with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
+        json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
     if action == "Issue_Next": response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
     elif action == "Issue_Dashboard": response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
