@@ -5,7 +5,7 @@ FROM python:3.13
 COPY requirements.txt ./
 
 # Install the python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt update && apt install iproute2 iputils-ping -y && pip install --no-cache-dir -r requirements.txt
 
 # Set the working directory
 WORKDIR /workspace
