@@ -1,7 +1,7 @@
 cff-version: 1.2.1
 message: "If you use this Software, please cite as follows:"
 title: "MONI"
-version: 0.1.23
+version: 0.2.11
 authors:
   - family-names: "Mielke"
     given-names: "Simon"
