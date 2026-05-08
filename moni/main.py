@@ -19,9 +19,10 @@ def bon(printer, bon): #https://python-escpos.readthedocs.io/en/latest/api/escpo
     printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut()
 
-hostname = socket.gethostname()
-print(socket.gethostbyname_ex(hostname))
-ip_addr = socket.gethostbyname_ex(hostname)[2][0]
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+ip_addr = s.getsockname()[0]
+s.close()
 qrc = qrcode.QRCode()
 qrc.add_data('http://' + ip_addr + ':8000')
 qrc.make()
