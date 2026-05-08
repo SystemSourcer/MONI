@@ -7,6 +7,9 @@
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <div style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%);">
+      <img src="/static/images/qrcode.png" style="width: 150px;" />
+    </div>
     <div class="icon-dark" onclick="setDMode()"><h1>Dark<h1></div>
     <h1>Hello {{ user }}, your role is "{{ role }}"</h1>
     <p>Following functions are available:</p>
@@ -18,6 +21,7 @@
       {% if (role == "organizer") or (role == "master") %}
         <button type="button" onclick="window.location.href='/input'">Input</button>
         <button type="button" onclick="window.location.href='/set_price'">Set Price</button>
+        <button type="button" onclick="window.location.href='/settings'">Settings</button>
       {% endif %}
       {% if role == "negotiator" or role == "master" %}
         <button type="button" onclick="window.location.href='/order_place'">Order</button>

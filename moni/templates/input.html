@@ -16,8 +16,20 @@
       <label for="item">Item:</label>
       <label for="quantity">Quantity:</label>
       <span class="grid-spacer"></span> 
-      <input id="category" name="category" required>
-      <input id="item" name="item" required>
+      <input id="category" name="category" list="cat_opions" required>
+      <datalist id="cat_opions">
+        {% for category in inventory.keys() %}
+          <option value="{{ category }}"></option>
+        {% endfor %}
+      </datalist>
+      <input id="item" name="item" list="item_options" required>
+      <datalist id="item_options">
+        {% for category in inventory.values() %}
+          {% for item in category %}
+            <option value="{{ item['item'] }}"></option>
+          {% endfor %}
+        {% endfor %}
+      </datalist>
       <input id="quantity" name="quantity" type="number" min="-1024" max="1024" step="1" required>
       <button type="submit">Add</button>
     </form>

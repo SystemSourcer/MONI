@@ -16,6 +16,7 @@
           <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
         {% endif %}
       {% endfor %}
+      <hr>
     {% endfor %}
     </form>
     <form id="OrderForm" method="post" action="order_goods">

@@ -16,18 +16,16 @@
       <label>Value:</label>
       <label>New Value:</label>
       <span class="grid-spacer"></span>
-      {% for category, idl in inventory.items() %}
-        {% for id in idl %}
-          <input id="{{id['item']}}_item" value="{{id['item']}}" readonly>
-          <input type="number" id="{{id['item']}}_price" value="{{id['price']}}" readonly>
-          <input type="number" name="{{id['item']}}" id="{{id['item']}}_new_price" value="{{id['price']}}" min="0" max="100" step="0.1" required>
-          <span class="grid-spacer"></span>
-        {% endfor %}
+      {% for option, value in settings.items() %}
+        <input id="{{ option }}_option" value="{{ option}}" readonly>
+        <input id="{{ option }}_value" value="{{ value }}" readonly>
+        <input name="{{ option }}" id="{{ option }}_new_price" value="{{ value }}" required>
+        <span class="grid-spacer"></span>
       {% endfor %}
       <span class="grid-spacer"></span> 
       <span class="grid-spacer"></span> 
       <span class="grid-spacer"></span>
-      <button type="submit">Set Price</button>
+      <button type="submit">Save Settings</button>
     </form>
     <script>
         var element = document.body;

@@ -13,16 +13,19 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Functions
-def bon(printer): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+def bon(printer, bon): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
     #printer.text('Moni')
     #printer.qr('Simon')
     printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut()
 
-def main():
-    hostname = socket.gethostname()
-    ip_addr = socket.gethostbyname(hostname)
-    qrc = ip_addr
+hostname = socket.gethostname()
+ip_addr = socket.gethostbyname(hostname)
+qrc = qrcode.QRCode()
+qrc.add_data('http://' + ip_addr + ':8000')
+qrc.make()
+qrc_img = qrc.make_image()
+qrc_img.save('/workspace/moni/static/images/qrcode.png')
 
 
 #p1 = Network("192.168.178.14") 
@@ -38,14 +41,16 @@ role_dict = {
     'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
-settings_dict = dict()
+try: 
+    with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
+        settings_dict  = json.load(settings_file)
+
+except: settings_dict = {'Issuer': False, 'Bon': True}
 
 place_dict = dict()
 for letter in ['A','B','C','D','E','F','G','H']:
     for number in range(10):
         place_dict[letter+str(number)]=False
-
-order_temp_list = []
 
 try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
@@ -74,7 +79,7 @@ print('Log_Flow:',flow_log)
 print('Oder_History:',order_history)
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("/workspace/moni/static/favicon.ico")
+    return FileResponse("/workspace/moni/static/images/favicon.ico")
 
 @app.get("/")
 def root():
@@ -88,7 +93,11 @@ def login_get(request: Request):
 def login_post(request: Request, role: str = Form(...), user: str = Form(...), password: str = Form(...)):
     
     if not role in role_dict.keys() or role_dict[role]["password"] != hashlib.sha512((password).encode()).hexdigest():
-        return templates.TemplateResponse(request, "login.html", {"error": "Ungültiger Benutzername oder Passwort"})
+        return templates.TemplateResponse(request, "login.html", {"error": "Invalid passwort (for selected role)"})
+    
+    if role == 'issuer' and not settings_dict["issuer"]:
+        return templates.TemplateResponse(request, "login.html", {"error": "Issuer is not activated..."})
+
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -126,7 +135,7 @@ def logout():
 def input(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request, "input.html")
+    return templates.TemplateResponse(request, "input.html", {"inventory": inventory})
 
 @app.post("/input")
 def input_post(request: Request, category: str = Form(...), item: str = Form(...), quantity: str = Form(...)):
@@ -169,13 +178,48 @@ async def set_price_post(request: Request):
     form = await request.form()
 
     for field_name, value in form.items():
-        print(f"New price vor {field_name}: {value}")
+        print(f"New price for {field_name}: {value}")
         for idl in inventory.values():
             for id in idl:
                 if id['item'] == field_name: id['price'] = value
     
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
         json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
+
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+    response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
+
+@app.get("/settings")
+def settings(request: Request):
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    if settings_dict['Bon']:
+        for key in inventory.keys():
+            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = None
+
+    del_key_list = []
+    for key in settings_dict.keys():
+        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+    
+    for key in del_key_list:
+        del [settings_dict[key]]
+
+    return templates.TemplateResponse(request, "settings.html", {"settings": settings_dict})
+
+@app.post("/settings")
+async def settings_post(request: Request):
+    form = await request.form()
+
+    for field_name, value in form.items():
+        print(f"New setting for {field_name}: {value}")
+        settings_dict[field_name] = value
+
+    with open("/workspace/data/settings.json", "w", encoding="utf-8") as settings_file:
+        json.dump(settings_dict, settings_file, ensure_ascii=False, indent=2)    
 
     role = request.cookies.get("role")
     user = request.cookies.get("user")
@@ -382,7 +426,7 @@ async def order_goods_post(request: Request):
 
     
 
-  
+
     response = RedirectResponse(url=f"/order_place", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -471,15 +515,6 @@ async def issue_post(request: Request):
 
 
 
-
-
-
-
-
-
-# Global 
-if __name__ == '__main__': #
-    main()
 
 
 
