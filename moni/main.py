@@ -1,6 +1,10 @@
+# Imports
 import json
+import socket
+import qrcode
 import hashlib
 from datetime import datetime
+from escpos.printer import Network
 from urllib.parse import quote_plus
 from fastapi import FastAPI, Request, Form, status
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +12,21 @@ from fastapi.responses import FileResponse
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+# Functions
+def bon(printer): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+    #printer.text('Moni')
+    #printer.qr('Simon')
+    printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
+    printer.cut()
+
+def main():
+    hostname = socket.gethostname()
+    ip_addr = socket.gethostbyname(hostname)
+    qrc = ip_addr
+
+
+#p1 = Network("192.168.178.14") 
+#bon(p1)
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="moni/static"), name="static")
 templates = Jinja2Templates(directory="./moni/templates")
@@ -19,7 +38,9 @@ role_dict = {
     'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
-place_dict = {}
+settings_dict = dict()
+
+place_dict = dict()
 for letter in ['A','B','C','D','E','F','G','H']:
     for number in range(10):
         place_dict[letter+str(number)]=False
@@ -456,7 +477,9 @@ async def issue_post(request: Request):
 
 
 
-
+# Global 
+if __name__ == '__main__': #
+    main()
 
 
 
