@@ -20,6 +20,7 @@ def bon(printer, bon): #https://python-escpos.readthedocs.io/en/latest/api/escpo
     printer.cut()
 
 hostname = socket.gethostname()
+print(socket.gethostbyname_ex(hostname))
 ip_addr = socket.gethostbyname_ex(hostname)[2][0]
 qrc = qrcode.QRCode()
 qrc.add_data('http://' + ip_addr + ':8000')
