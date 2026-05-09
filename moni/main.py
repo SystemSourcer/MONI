@@ -30,7 +30,7 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(datetime.now().strftime("%d. %B %Y %H:%M"))
     printer.textln(f'{keywords['order']}: {order_key}')
     printer.textln(f'{keywords['place']}: {order['place']}')
-    printer.textln(f'{keywords['negoiator']}: {order['negoiator']} - {order['ordered']}')
+    printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
     printer.text("-" * 32)
     for item in order['items']:
