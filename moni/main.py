@@ -281,7 +281,7 @@ def output(request: Request, category: str):
     prepare_order_key_list = [key for key, order in order_history.items() if order['organizer'] == user and order['prepared'] == None]
     if not prepare_order_key_list: 
     
-        open_order_key_list = [key for key, order in order_history.keys() if order['organizer'] == None]
+        open_order_key_list = [key for key, order in order_history.items() if order['organizer'] == None]
         for n, key in enumerate(open_order_key_list):
             if n == 0: 
                 order_history[key]['organizer']
