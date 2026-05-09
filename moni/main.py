@@ -19,19 +19,27 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     Prits the order on the corresponding printer (via category)
     """
     order = order_history[order_key]
+    keywords = keywords_dict[settings_dict['Bon_Language']]
     printer = Network(settings_dict[f'Printer-{order['category']}'])
-    printer.set(align='center', bold = True, width=2, height=2)
+    printer.set(align='center', bold = True, width=4, height=4)
     printer.textln(settings_dict['Event'])
     printer.set(bold=False, width=1, height=1)
     printer.textln(settings_dict['Host'])
     printer.set(align='left')
     printer.ln(1)
-    printer.text(datetime.now().strftime("%d. %B %Y"))
-    printer.set(align='right')
-    printer.textln(datetime.now().strftime("%H:%M"))
-    printer.qr(json.dumps(order))
+    printer.textln(datetime.now().strftime("%d. %B %Y %H:%M"))
+    printer.textln(f'{keywords['order']}: {order_key}')
+    printer.textln(f'{keywords['palce']}: {order['place']}')
+    printer.textln(f'{keywords['negoiator']}: {order['negoiator']} - {order['ordered']}')
+    printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
+    printer.text("-" * 32)
+    for item in order['items']:
+        printer.text(f'{item['quantiy']}x {item['item']}')
+
+    printer.text("-" * 32)
+    printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 5) # defualt size = 3
     #printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
-    printer.cut()
+    printer.cut(mode='PART', feed=False)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
@@ -57,9 +65,9 @@ role_dict = {
     'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
-keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'negotiator'}, 
-                 'German':{'order':'Order', 'place':'Place', 'negotiator':'negotiator'}}
-
+keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'Negotiator', 'organizer':'Preparer'}, 
+                 'German':{'order':'Bestellung', 'place':'Platz', 'negotiator':'Besteller', 'organizer':'Vorberteiter' }
+                }
 
 try: 
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
