@@ -351,6 +351,8 @@ async def prepared_post(request: Request):
     order['organizer'] = user
     order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
+    print_bon(order_key)
+
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
