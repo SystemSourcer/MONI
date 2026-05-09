@@ -28,7 +28,7 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.ln(1)
     printer.text(datetime.now().strftime("%d. %B %Y"))
     printer.set(align='right')
-    printer.textnl(datetime.now().strftime("%H:%M"))
+    printer.textln(datetime.now().strftime("%H:%M"))
     printer.qr(json.dumps(order))
     #printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut()
