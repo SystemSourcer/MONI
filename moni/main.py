@@ -34,7 +34,7 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
     printer.text("-" * 32)
     for item in order['items']:
-        printer.text(f'{item['quantiy']}x {item['item']}')
+        printer.text(f'{item['quantity']}x {item['item']}')
 
     printer.text("-" * 32)
     printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 5) # defualt size = 3
