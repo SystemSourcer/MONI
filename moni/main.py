@@ -1,5 +1,6 @@
 # Imports
-import json
+import json 
+import locale
 import socket
 import qrcode
 import hashlib
@@ -13,10 +14,23 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Functions
-def bon(printer, bon): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
-    #printer.text('Moni')
-    #printer.qr('Simon')
-    printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
+def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+    """ 
+    Prits the order on the corresponding printer (via category)
+    """
+    order = order_history[order_key]
+    printer = Network(settings_dict[f'Printer-{order['category']}'])
+    printer.set(align='center', bold = True, width=2, height=2)
+    printer.textln(settings_dict['Event'])
+    printer.set(bold=False, width=1, height=1)
+    printer.textln(settings_dict['Host'])
+    printer.set(align='left')
+    printer.ln(1)
+    printer.text(datetime.now().strftime("%d. %B %Y"))
+    printer.set(align='right')
+    printer.textnl(datetime.now().strftime("%H:%M"))
+    printer.qr(json.dumps(order))
+    #printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,11 +57,15 @@ role_dict = {
     'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
+keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'negotiator'}, 
+                 'German':{'order':'Order', 'place':'Place', 'negotiator':'negotiator'}}
+
+
 try: 
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
         settings_dict  = json.load(settings_file)
 
-except: settings_dict = {'Issuer': False, 'Bon': True}
+except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': False, 'Bon': True, 'Bon_Language': 'German'}
 
 place_dict = dict()
 for letter in ['A','B','C','D','E','F','G','H']:
@@ -201,11 +219,15 @@ def settings(request: Request):
     if not role: return RedirectResponse(url="/login")
     if settings_dict['Bon']:
         for key in inventory.keys():
-            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = None
+            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = None  # None or Ip-Adress
+            if f'Auto_Print-{key}' not in settings_dict: settings_dict[f'Auto_Print-{key}'] = False # True or False
+            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = None # None or time in seconds
 
     del_key_list = []
     for key in settings_dict.keys():
         if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
     
     for key in del_key_list:
         del [settings_dict[key]]
@@ -219,6 +241,8 @@ async def settings_post(request: Request):
     for field_name, value in form.items():
         print(f"New setting for {field_name}: {value}")
         settings_dict[field_name] = value
+
+    if settings_dict['Bon_Language'] == 'Gemran': locale.setlocale(locale.LC_TIME, "de_DE.UTF-8") # for german month names
 
     with open("/workspace/data/settings.json", "w", encoding="utf-8") as settings_file:
         json.dump(settings_dict, settings_file, ensure_ascii=False, indent=2)    
@@ -251,11 +275,30 @@ async def place_management_post(request: Request, place: str = Form(...)):
 @app.get("/output")
 def output(request: Request, category: str):
     role = request.cookies.get("role")
+    user = request.cookies.get("user")
     if not role: return RedirectResponse(url="/login")
+
+    prepare_order_key_list = [key for key, order in order_history.items() if order['organizer'] == user and order['prepared'] == None]
+    if not prepare_order_key_list: 
+    
+        open_order_key_list = [key for key, order in order_history.keys() if order['organizer'] == None]
+        for n, key in enumerate(open_order_key_list):
+            if n == 0: 
+                order_history[key]['organizer']
+                prepare_order_key_list = list(key)
+
+            elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['palce']: 
+                order_history[key]['organizer'] = user
+                prepare_order_key_list.append(key)
+                
+            if len(prepare_order_key_list) >= 3: break
+
+    prepare_order_list = [order_history[key] for key in prepare_order_key_list]
+
     assigned_order_key_list = [key for key, order in order_history.items() if order["issuer"] != None and order["prepared"]== None and order['category'] == category]
     assigned_order_list = [order_history[order_key] for order_key in assigned_order_key_list]
     print(assigned_order_list)
-    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "assigned_order_key_list":assigned_order_key_list, "assigned_order_list": assigned_order_list})
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "prepare_order_key_list":prepare_order_key_list, "prepare_order_list": prepare_order_list})
 
 @app.post("/output")
 async def output_post(request: Request):
@@ -387,7 +430,7 @@ async def order_goods_post(request: Request):
         
         if 'category' in field_name:
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_1', 'role':role, 'user': user, 'category':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order', 'role':role, 'user': user, 'category':value}
             itemwise_order = dict()
             itemwise_order['category'] = value
 
@@ -396,7 +439,7 @@ async def order_goods_post(request: Request):
             itemwise_order['item'] = value
 
         elif 'quantity' in field_name: 
-            flow_log[n+1]['quantity'] = 0
+            flow_log[n+1]['quantity'] = value
             itemwise_order['quantity'] = value
             for idl in inventory.values():
                 for id in idl:
@@ -425,9 +468,6 @@ async def order_goods_post(request: Request):
 
     with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
         json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
-
-    
-
 
     response = RedirectResponse(url=f"/order_place", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
