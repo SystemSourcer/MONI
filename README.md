@@ -3,7 +3,7 @@
 This is MONI, the Main Organsisational Networking Interface  
 
 # Logo / Icon
-![Icon](moni/static/favicon.ico)  
+![Icon](moni/static/images/favicon.ico)  
 
 ## Descibtion
 MONI originally came about from the idea of creating a sort of “[Kassenka](https://play.google.com/store/apps/details?id=com.ankele.kassenka&hl=de)” version for the computer.  
@@ -21,8 +21,13 @@ docker build -t moni ./
 ```
 
 ### Start the Docker container:
+On WIndows (only without printers and qrcode)
 ```bash 
 docker run -it --rm -p 8000:8000 C:\Path\to\GitHub\MONI:/workspace moni bash
+```
+On Linux (with all functions)
+```bash 
+docker run -it --rm --net=host /Path/to/GitHub/MONI:/workspace moni bash
 ```
 
 ### Creat password hashs
