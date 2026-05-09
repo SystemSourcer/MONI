@@ -285,7 +285,7 @@ def output(request: Request, category: str):
         for n, key in enumerate(open_order_key_list):
             if n == 0: 
                 order_history[key]['organizer']
-                prepare_order_key_list = list(key)
+                prepare_order_key_list = [key]
 
             elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['palce']: 
                 order_history[key]['organizer'] = user
