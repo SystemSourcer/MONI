@@ -21,7 +21,7 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     order = order_history[order_key]
     keywords = keywords_dict[settings_dict['Bon_Language']]
     printer = Network(settings_dict[f'Printer-{order['category']}'])
-    printer.profile.media.width.pixels = 384  # or 576, depending to the printer
+    printer.profile.media['width']['pixels'] = 384  # or 576, depending to the printer
     printer.set(align='center', bold = True, double_width=True, double_height=True)
     printer.textln(settings_dict['Event'])
     printer.set(bold=False, double_width=False, double_height=False)
