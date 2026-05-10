@@ -22,9 +22,9 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     keywords = keywords_dict[settings_dict['Bon_Language']]
     printer = Network(settings_dict[f'Printer-{order['category']}'])
     printer.profile.media['width']['pixels'] = 567 # or 384, depending to the printer
-    printer.set(align='center', bold = True, double_width=True, double_height=True)
+    printer.set(align='center', bold = True, custom_size=True, width=2, height=2)
     printer.textln(settings_dict['Event'])
-    printer.set(bold=False, double_width=None, double_height=None)
+    printer.set(bold=False, width=1, height=1)
     printer.textln(settings_dict['Host'])
     printer.set(align='left')
     printer.ln(1)
@@ -34,11 +34,11 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
-    printer.set(bold = True, double_width=True, double_height=True)
+    printer.set(bold = True, width=2, height=2)
     for item in order['items']:
         printer.textln(f'{item['quantity']}x {item['item']} # {item['custom']}')
 
-    printer.set(bold=False, double_width=None, double_height=None)
+    printer.set(bold=False, width=1, height=1)
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3
     printer.cut(mode='FULL', feed=False)
