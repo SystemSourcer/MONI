@@ -32,11 +32,11 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['place']}: {order['place']}')
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
-    printer.textln("-" * settings_dict['Bon_Row_Chars'])
+    printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     for item in order['items']:
         printer.textln(f'{item['quantity']}x {item['item']}')
 
-    printer.textln("-" * settings_dict['Bon_Row_Chars'])
+    printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4) # defualt size = 3
     #printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut(mode='PART', feed=False)
