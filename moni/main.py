@@ -32,12 +32,12 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['place']}: {order['place']}')
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
-    printer.text("-" * 32)
+    printer.textln("-" * settings_dict['Bon_Row_Chars'])
     for item in order['items']:
-        printer.text(f'{item['quantity']}x {item['item']}')
+        printer.textln(f'{item['quantity']}x {item['item']}')
 
-    printer.text("-" * 32)
-    printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 5) # defualt size = 3
+    printer.textln("-" * settings_dict['Bon_Row_Chars'])
+    printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4) # defualt size = 3
     #printer.image('/workspace/moni/static/favicon.ico', high_density_vertical=False, high_density_horizontal=False, impl='graphics')
     printer.cut(mode='PART', feed=False)
 
@@ -73,7 +73,7 @@ try:
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
         settings_dict  = json.load(settings_file)
 
-except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': False, 'Bon': True, 'Bon_Language': 'German'}
+except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': False, 'Bon': True, 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
 
 place_dict = dict()
 for letter in ['A','B','C','D','E','F','G','H']:
@@ -358,6 +358,12 @@ async def prepared_post(request: Request):
     order = order_history[order_key]
     order['organizer'] = user
     order['prepared'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    for item in order['items']:
+        for item_dict in inventory[category]:
+            if item_dict['item'] == item['item']: 
+                item_dict['ordered'] -= int(item['quantity'])
+                item_dict['quantity'] -= int(item['quantity'])
 
     print_bon(order_key)
 
