@@ -30,9 +30,11 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.ln(1)
     printer.textln(datetime.now().strftime("%d. %B %Y %H:%M"))
     printer.textln(f'{keywords['order']}: {order_key}')
-    printer.textln(f'{keywords['place']}: {order['place']}')
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
+    printer.set(bold = True, custom_size=True, width=2, height=2)
+    printer.textln(f'{keywords['place']}: {order['place']}')
+    printer.set(bold=False, custom_size=True, width=1, height=1)
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.set(bold = True, custom_size=True, width=2, height=2)
     for item in order['items']:
