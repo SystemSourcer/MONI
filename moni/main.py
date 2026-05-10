@@ -34,11 +34,11 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
-    printer.set(bold = True, width=2, height=2)
+    printer.set(bold = True, custom_size=True, width=2, height=2)
     for item in order['items']:
         printer.textln(f'{item['quantity']}x {item['item']} # {item['custom']}')
 
-    printer.set(bold=False, width=1, height=1)
+    printer.set(bold=False, custom_size=True, width=1, height=1)
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3
     printer.cut(mode='PART', feed=False)
