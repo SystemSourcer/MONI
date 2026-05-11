@@ -9,15 +9,16 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Order Goods for: {{place}}</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form class="button-grid">
-    {% for category in inventory %}
-      {% for item_dict in inventory[category] %}
-        {% if item_dict['quantity'] > 0 %}
-          <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
-        {% endif %}
+      <form class="button-grid">
+      {% for category in inventory %}
+        {% for item_dict in inventory[category] %}
+          {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
+            <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          {% endif %}
+        {% endfor %}
+        <hr>
       {% endfor %}
-      <hr>
-    {% endfor %}
+      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
     </form>
     <form id="OrderForm" method="post" action="order_goods">
       <input type="hidden" name="place" value="{{place}}">
@@ -26,10 +27,10 @@
       <label>Price in €:</label>
       <label>Custom:</label>
       <hr id="hrForm">
-      <span class="grid-spacer"></span> 
+      <button type="submit" id="order">Order</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="submit" id="order">Order</button>
+      <button type="button" id="paid" onclick="enableOrder()">Paid</button>
     </form>
     <script>
       var element = document.body;
@@ -38,8 +39,24 @@
       }
       document.querySelector(`input[name="total"]`).value = "0"
       document.getElementById("order").disabled = true;
+      document.getElementById("paid").disabled = true;
 
-    function clickButton(cat, name, max_quantity, ordered, pricePerUnit) {
+      let free = false
+
+    function enableOrder(){
+      document.getElementById("order").disabled = false;
+    }
+
+    function toggleFree(){
+      free = !free 
+      if (free){
+        document.getElementById("togfree").style.background='#00a817';
+      } else {
+        document.getElementById("togfree").style.background='';
+      }
+    }
+
+    function addItem(cat, name, max_quantity, ordered, pricePerUnit) {
       const form = document.getElementById('OrderForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
       let category = document.querySelector(`input[name="${name}_category"]`);
@@ -76,7 +93,7 @@
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
         form.insertBefore(custom, hrForm)
-        document.getElementById("order").disabled = false;
+        document.getElementById("paid").disabled = false;
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 
@@ -84,7 +101,11 @@
           if (isUpdating) return;
           isUpdating = true;
           const q = parseFloat(quantity.value);
-          price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+          if (free) {
+            price.value = "0"
+          } else {
+            price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+          }
           
           let sum = 0;
           const priceFields = document.querySelectorAll(('input[name*="price"]'));
@@ -104,7 +125,11 @@
       quantity.value = Math.min(current + 1, parseInt(max_quantity) - parseInt(ordered));
 
       const q = parseFloat(quantity.value);
+      if (free) {
+        price.value = "0"
+      } else {
       price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+      }
 
       let sum = 0;
       const priceFields = document.querySelectorAll(('input[name*="price"]'));

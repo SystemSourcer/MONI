@@ -14,9 +14,10 @@
     <form class="button-grid">
       {% for item_dict in assortment %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-          <button  style="font-size : 24px; width: 200px; height: 100px;" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="clickButton(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          <button  style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
         {% endif %}
       {% endfor %}
+      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
     </form>
     <form id="OutputForm" method="post" action="/output">
       <label>Item:</label>
@@ -24,14 +25,14 @@
       <label>Price in €:</label>
       <span class="grid-spacer"></span> 
       <hr id="hrForm">
-      <span class="grid-spacer"></span> 
+      <button type="submit" id="giveOut" name="category" value={{category}}>Give Out</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="submit" id="giveOut" name="category" value={{category}}>Give Out</button>
+      <button type="button" id="paid" onclick="enableOrder()" >Paid</button>
     </form>
     {% for i in range(prepare_order_list|length) %}
       <h2>Order number {{ prepare_order_key_list[i] }} for place {{ prepare_order_list[i]['place'] }}:</h2>
-      <form method="post" action="/prepared">
+      <form id="PrepareForm_{{i}}" method="post" action="/prepared">
         <input type="hidden" name="order_key" value="{{ prepare_order_key_list[i] }}">
         <label  for="negotiator"> Ordered from:</label>
         <input type="text" value="{{ prepare_order_list[i]['negotiator'] }}" readonly>
@@ -50,10 +51,14 @@
             <input type="text" value="{{item['quantity']}}">
             <input style="grid-column: 3 / span 2" type="text" value="{{item['custom']}}">
         {% endfor %}
-        <span class="grid-spacer"></span> 
-        <span class="grid-spacer"></span> 
-        <span class="grid-spacer"></span> 
-        <button type="submit" name="category" value={{category}}>Prepared</button>
+        {% if auto_prep %}
+          <progress style="grid-column: 1 / span 3; border-radius: 10px; height: 30px" id="timeProgress_{{i}}" value="0" max="1200"></progress>
+        {% else %}
+          <span class="grid-spacer"></span> 
+          <span class="grid-spacer"></span> 
+          <span class="grid-spacer"></span> 
+        {% endif %}
+        <button type="submit" name="category" id="PrepareButton_{{i}}" value={{category}}>Prepared</button>
       </form>
     {% endfor %}
     <script>
@@ -61,11 +66,35 @@
       if (window.sessionStorage.getItem('Mode') === 'dark') {
         element.classList.toggle("dark-mode");
       }
+
       document.querySelector(`input[name="total"]`).value = "0"
       document.getElementById("giveOut").disabled = true;
-  
-      
-    function clickButton(name, max_quantity, ordered, pricePerUnit) {
+      document.getElementById("paid").disabled = true;
+
+      let free = false
+      let pbar = document.getElementById("timeProgress_0")
+      const intervalId = setInterval(autoPrepare,100)
+    
+    function enableOrder(){
+      document.getElementById("giveOut").disabled = false;
+    }
+
+    function toggleFree(){
+      free = !free 
+      if (free){
+        document.getElementById("togfree").style.background='#00a817';
+      } else {
+        document.getElementById("togfree").style.background='';
+      }
+    }
+
+    function autoPrepare(){
+      pbar.value += 120 / parseInt("{{auto_prep}}")
+      if (pbar.value == 1200){document.getElementById("PrepareButton_0").click()}
+    }
+
+    function addItem(name, max_quantity, ordered, pricePerUnit) {
+      clearInterval(intervalId); 
       const form = document.getElementById('OutputForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
       let item = document.querySelector(`input[name="${name}_item"]`);
@@ -96,7 +125,7 @@
         form.insertBefore(quantity, hrForm)
         form.insertBefore(price, hrForm)
         form.insertBefore(gridSpacer, hrForm);
-        document.getElementById("giveOut").disabled = false;
+        document.getElementById("paid").disabled = false;
         // Kopplung nur einmal einrichten:
         let isUpdating = false;
 
@@ -104,7 +133,11 @@
           if (isUpdating) return;
           isUpdating = true;
           const q = parseFloat(quantity.value);
-          price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+          if (free) {
+            price.value = "0"
+          } else {
+            price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+          }
           
           let sum = 0;
           const priceFields = document.querySelectorAll(('input[name*="price"]'));
@@ -124,7 +157,11 @@
       quantity.value = Math.min(current + 1, parseInt(max_quantity) - parseInt(ordered));
 
       const q = parseFloat(quantity.value);
+      if (free) {
+        price.value = "0"
+      } else {
       price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+      }
 
       let sum = 0;
       const priceFields = document.querySelectorAll(('input[name*="price"]'));

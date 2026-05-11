@@ -32,9 +32,6 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.textln(f'{keywords['order']}: {order_key}')
     printer.textln(f'{keywords['negotiator']}: {order['negotiator']} - {order['ordered']}')
     printer.textln(f'{keywords['organizer']}: {order['organizer']} - {order['prepared']}')
-    printer.set(bold = True, custom_size=True, width=2, height=2)
-    printer.textln(f'{keywords['place']}: {order['place']}')
-    printer.set(bold=False, custom_size=True, width=1, height=1)
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.set(bold = True, custom_size=True, width=2, height=2)
     for item in order['items']:
@@ -42,7 +39,12 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
 
     printer.set(bold=False, custom_size=True, width=1, height=1)
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
-    printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3
+    printer.set(align='center')
+    printer.textln(f'{keywords['place']}:')
+    printer.set(bold = True, custom_size=True, width=4, height=4)
+    printer.textln(f'{order['place']}')
+    printer.set(bold=False, custom_size=True, width=1, height=1)
+    # printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3 # digital bon 7 ebon
     printer.cut(mode='PART', feed=False)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -70,7 +72,7 @@ role_dict = {
 }
 
 keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'Negotiator', 'organizer':'Preparer'}, 
-                 'German':{'order':'Bestellung', 'place':'Platz', 'negotiator':'Besteller', 'organizer':'Vorberteiter' }
+                 'German':{'order':'Bestellung', 'place':'Platz', 'negotiator':'Besteller', 'organizer':'Vorbereiter' }
                 }
 
 try: 
@@ -79,10 +81,16 @@ try:
 
 except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': False, 'Bon': True, 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
 
-place_dict = dict()
-for letter in ['A','B','C','D','E','F','G','H']:
-    for number in range(10):
-        place_dict[letter+str(number)]=False
+
+try:
+    with open("/workspace/data/place.json", "r", encoding="utf-8") as place_file:
+        place_dict  = json.load(place_file)
+
+except:
+    place_dict = dict()
+    for letter in ['A','B','C','D','E','F','G','H']:
+        for number in range(10):
+            place_dict[letter+str(number)]=False
 
 try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
@@ -232,8 +240,8 @@ def settings(request: Request):
     if settings_dict['Bon']:
         for key in inventory.keys():
             if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = None  # None or Ip-Adress
-            if f'Auto_Print-{key}' not in settings_dict: settings_dict[f'Auto_Print-{key}'] = False # True or False
-            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = None # None or time in seconds
+            if f'Direct_Print-{key}' not in settings_dict: settings_dict[f'Direct_Print-{key}'] = False # True or False
+            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = False # None or time in seconds
 
     del_key_list = []
     for key in settings_dict.keys():
@@ -276,6 +284,9 @@ def place_management(request: Request):
 async def place_management_post(request: Request, place: str = Form(...)):
     if place_dict[place] == True: place_dict[place] = False
     else: place_dict[place] = True
+
+    with open("/workspace/data/place.json", "w", encoding="utf-8") as place_file:
+        json.dump(place_dict, place_file, ensure_ascii=False, indent=2)
     
     role = request.cookies.get("role")
     user = request.cookies.get("user")
@@ -291,15 +302,16 @@ def output(request: Request, category: str):
     if not role: return RedirectResponse(url="/login")
 
     prepare_order_key_list = [key for key, order in order_history.items() if order['organizer'] == user and order['prepared'] == None]
+    print(prepare_order_key_list)
     if not prepare_order_key_list: 
     
-        open_order_key_list = [key for key, order in order_history.items() if order['organizer'] == None]
+        open_order_key_list = [key for key, order in order_history.items() if order['organizer'] == None and [order['category'] == category]]
         for n, key in enumerate(open_order_key_list):
             if n == 0: 
-                order_history[key]['organizer']
+                order_history[key]['organizer'] = user
                 prepare_order_key_list = [key]
 
-            elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['palce']: 
+            elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['place']: 
                 order_history[key]['organizer'] = user
                 prepare_order_key_list.append(key)
                 
@@ -307,10 +319,7 @@ def output(request: Request, category: str):
 
     prepare_order_list = [order_history[key] for key in prepare_order_key_list]
 
-    assigned_order_key_list = [key for key, order in order_history.items() if order["issuer"] != None and order["prepared"]== None and order['category'] == category]
-    assigned_order_list = [order_history[order_key] for order_key in assigned_order_key_list]
-    print(assigned_order_list)
-    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "prepare_order_key_list":prepare_order_key_list, "prepare_order_list": prepare_order_list})
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "prepare_order_key_list":prepare_order_key_list, "prepare_order_list": prepare_order_list, "auto_prep":settings_dict[f'Auto_Prepare-{category}']})
 
 @app.post("/output")
 async def output_post(request: Request):
@@ -499,14 +508,21 @@ def issue(request:Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
     if not role: return RedirectResponse(url="/login")
-    issuer_order_list = [key for key, order in order_history.items() if order['issuer'] == user and order['issued'] == None]
-    if issuer_order_list: return templates.TemplateResponse(request,"issue.html", {"order_key": issuer_order_list[0], "order": order_history[issuer_order_list[0]]})
-    order_key = 0
-    for k,o in order_history.items():
-        if o['issuer'] == None: 
-            o['issuer'] = user
-            order_key = k
-            break
+    issue_order_key_list = [key for key, order in order_history.items() if order['issuer'] == user and order['issued'] == None]
+    
+    if not prepare_order_key_list: 
+        prepare_order_key_list = [key for key, order in order_history.items() if order['organizer']!= None and order['issued'] == None]
+        for n, key in enumerate(prepare_order_key_list):
+            if n == 0: 
+                order_history[key]['organizer']
+                prepare_order_key_list = [key]
+
+            elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['palce']: 
+                order_history[key]['organizer'] = user
+                prepare_order_key_list.append(key)
+                
+            if len(prepare_order_key_list) >= 3: break
+
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
