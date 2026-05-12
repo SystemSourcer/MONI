@@ -57,9 +57,6 @@ qrc.make()
 qrc_img = qrc.make_image()
 qrc_img.save('/workspace/moni/static/images/qrcode.png')
 
-
-#p1 = Network("192.168.178.14") 
-#bon(p1)
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="moni/static"), name="static")
 templates = Jinja2Templates(directory="./moni/templates")
@@ -79,7 +76,7 @@ try:
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
         settings_dict  = json.load(settings_file)
 
-except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': False, 'Bon': True, 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
+except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': 'No', 'Bon': 'Yes', 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
 
 
 try:
@@ -114,9 +111,6 @@ try:
 
 except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':'2', 'custom':'No real Order'},{'category':'Init_1', 'item':'Init_1', 'quantitiy':'1', 'custom':'No real Order'},{'category':'Init_2', 'item':'Init_2', 'quantitiy':'3', 'custom':'No real Order'}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
 
-print('Inventory:',inventory)
-print('Log_Flow:',flow_log)
-print('Oder_History:',order_history)
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse("/workspace/moni/static/images/favicon.ico")
@@ -148,7 +142,7 @@ def dashboard(request: Request):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
     if not role: return RedirectResponse(url="/login") 
-    return templates.TemplateResponse(request, "dashboard.html", {"role": role, "user": user, "inventory":inventory})
+    return templates.TemplateResponse(request, "dashboard.html", {"role": role, "user": user, "inventory":inventory, "settings": settings_dict})
 
 @app.post("/dashboard")
 def dashboard_post(request: Request, category: str = Form(...), action: str = Form(...)):
@@ -158,6 +152,9 @@ def dashboard_post(request: Request, category: str = Form(...), action: str = Fo
     
     if action == "Return":
         response = RedirectResponse(url=f"/return?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
+
+    if action == "Set_Price":
+        response = RedirectResponse(url=f"/set_price?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
 
     role = request.cookies.get("role")
     user = request.cookies.get("user")
@@ -208,10 +205,10 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     return response
 
 @app.get("/set_price")
-def set_price(request: Request):
+def set_price(request: Request, category: str):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request, "set_price.html", {"inventory": inventory})
+    return templates.TemplateResponse(request, "set_price.html", {"assortment": inventory[category]})
 
 @app.post("/set_price") 
 async def set_price_post(request: Request):
@@ -222,6 +219,7 @@ async def set_price_post(request: Request):
         for idl in inventory.values():
             for id in idl:
                 if id['item'] == field_name: id['price'] = value
+                   
     
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
         json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
@@ -237,17 +235,17 @@ async def set_price_post(request: Request):
 def settings(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    if settings_dict['Bon']:
+    if settings_dict['Bon'] == 'Yes':
         for key in inventory.keys():
-            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = None  # None or Ip-Adress
-            if f'Direct_Print-{key}' not in settings_dict: settings_dict[f'Direct_Print-{key}'] = False # True or False
-            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = False # None or time in seconds
+            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = 'None'  # None or Ip-Adress
+            if f'Direct_Print-{key}' not in settings_dict: settings_dict[f'Direct_Print-{key}'] = 'Off' # True or False
+            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = 'Off' # None or time in seconds
 
     del_key_list = []
     for key in settings_dict.keys():
-        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
     
     for key in del_key_list:
         del [settings_dict[key]]
@@ -302,10 +300,11 @@ def output(request: Request, category: str):
     if not role: return RedirectResponse(url="/login")
 
     prepare_order_key_list = [key for key, order in order_history.items() if order['organizer'] == user and order['prepared'] == None]
-    print(prepare_order_key_list)
+    # print(prepare_order_key_list)
     if not prepare_order_key_list: 
     
-        open_order_key_list = [key for key, order in order_history.items() if order['organizer'] == None and [order['category'] == category]]
+        open_order_key_list = [key for key, order in order_history.items() if order['organizer'] == None and order['category'] == category]
+        # print(open_order_key_list, category)
         for n, key in enumerate(open_order_key_list):
             if n == 0: 
                 order_history[key]['organizer'] = user
@@ -434,7 +433,7 @@ async def return_post(request: Request):
 def balance_sheet(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    return templates.TemplateResponse(request,"balance_sheet.html", {"flow_log": flow_log})
+    return templates.TemplateResponse(request,"balance_sheet.html", {"flow_log": flow_log, "inventory": inventory})
 
 @app.get("/order_place")
 def order_place(request: Request):
@@ -592,6 +591,30 @@ async def issue_post(request: Request):
     return response
 
 
+@app.get("/test_print")
+def test_print(request: Request):
+    role = request.cookies.get("role")
+    if not role: return RedirectResponse(url="/login")
+    if settings_dict['Bon']:
+        printer_list = []
+        for key, val in settings_dict.items():
+            if 'Printer-' in key: printer_list.append({'printer':key, 'address':val}) 
+ 
+        return templates.TemplateResponse(request,"test_print.html", {"printers": printer_list})
+    
+    else: return templates.TemplateResponse(request, "test_print.html", {"error": "Bon printing is not activated..."})
+
+@app.post("/test_print")
+async def post_test_print(request: Request, printer:str):
+    role = request.cookies.get("role")
+    user = request.cookies.get("user")
+
+    print_bon(0) # 0 is the init system order
+
+    response = RedirectResponse(url=f"/test_ptint", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
+    return response
 
 
 

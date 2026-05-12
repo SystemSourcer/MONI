@@ -16,13 +16,11 @@
       <label>Price in €:</label>
       <label>New Price in €:</label>
       <span class="grid-spacer"></span>
-      {% for category, idl in inventory.items() %}
-        {% for id in idl %}
-          <input id="{{id['item']}}_item" value="{{id['item']}}" readonly>
-          <input type="number" id="{{id['item']}}_price" value="{{id['price']}}" readonly>
-          <input type="number" name="{{id['item']}}" id="{{id['item']}}_new_price" value="{{id['price']}}" min="0" max="100" step="0.1" required>
-          <span class="grid-spacer"></span>
-        {% endfor %}
+      {% for id in assortment %}
+        <input id="{{id['item']}}_item" value="{{id['item']}}" readonly>
+        <input type="number" id="{{id['item']}}_price" value="{{id['price']}}" readonly>
+        <input type="number" name="{{id['item']}}" id="{{id['item']}}_new_price" value="{{id['price']}}" min="0" max="100" step="0.1" required>
+        <span class="grid-spacer"></span>
       {% endfor %}
       <span class="grid-spacer"></span> 
       <span class="grid-spacer"></span> 

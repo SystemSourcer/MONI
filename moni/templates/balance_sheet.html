@@ -14,28 +14,44 @@
     <form id="balanceFilter">
       <label>From:</label>
       <label>Up to:</label>
-      <label>Type</label>
-      <span class="grid-spacer"></span> 
+      <label>Type:</label>
+      <label>Role:</label>
       <input type="datetime-local" name="start" id="start" required>
       <input type="datetime-local" name="end" id="end" required>
       <select id="type" name="type">
         <option value="out_all">Output (all)</option>
-        <option value="order_all">Order (all)</option>
-        <option value="order_stage_1">Order (stage_1)</option>
-        <option value="order_stage_3">Order (stage_3)</option>
+        <option value="order">Order</option>
         <option value="output">Output (only)</option>
         <option value="return">Return (only)</option>
         <option value="input">Input</option>
         <option value="all">All</option>
       </select>
-      <span class="grid-spacer"></span> 
+      <select id="role" name="role">
+        <option value="all">All</option>
+        <option value="master">Master</option>
+        <option value="organizer">Organizer</option>
+        <option value="negotiator">Negotiator</option>
+        <option value="issuer">Issuer</option>
+      </select>
+      <label>User:</label>
       <label>Category:</label>
       <label>Item:</label>
       <span class="grid-spacer"></span> 
-      <span class="grid-spacer"></span> 
-      <input name="category" id="category">
-      <input name="item" id="item">
-      <span class="grid-spacer"></span> 
+      <input name="user" id="user">
+      <input name="category" id="category" list="cat_opions">
+      <datalist id="cat_opions">
+        {% for category in inventory.keys() %}
+          <option value="{{ category }}"></option>
+        {% endfor %}
+      </datalist>
+      <input name="item" id="item" list="item_options">
+      <datalist id="item_options">
+        {% for category in inventory.values() %}
+          {% for item in category %}
+            <option value="{{ item['item'] }}"></option>
+          {% endfor %}
+        {% endfor %}
+      </datalist>
       <button type="submit">Make Balance</button>
     </form>
     <div id="flow-log-data"
@@ -57,7 +73,7 @@
           {% for key in flow_log[0].keys() %}
             <th id="sum{{key}}" style="text-align: center;"></th>
           {% endfor %}
-          <th style="text-align: center;">Summe</th>
+          <th style="text-align: center;">Sum</th>
         </tr>
       </tfoot>
     </table>
@@ -85,15 +101,21 @@
       const end = document.getElementById('end').value;
       const type_string = document.getElementById('type').value;
       let type_array
-      if (type_string === 'order_all'){
-        type_array = ['order_stage_1','order_stage_3'];
-      } else if (type_string === 'out_all'){
-        type_array = ['order_stage_1','order_stage_3','output','return'];
+      if (type_string === 'out_all'){
+        type_array = ['order','output','return'];
       } else if (type_string === 'all'){
-        type_array = ['order_stage_1','order_stage_3','output','return', 'input'];
+        type_array = ['order','output','return', 'input'];
       } else {
         type_array = [type_string];
       }
+      const role_string = document.getElementById('role').value;
+      let role_array
+      if (role_string === 'all'){
+        role_array = ['master','organizer','negotiator'];
+      } else {
+        role_array = [role_string];
+      }
+      const user = document.getElementById('user').value;
       const cat = document.getElementById('category').value;
       const item = document.getElementById('item').value;
       const elem = document.getElementById("flow-log-data");
@@ -107,15 +129,13 @@
       for (const [id, eintrag] of Object.entries(flow_log)){
         const tr = document.createElement('tr');
         for (const col of columns){
-          if (col === 'type' && !type_array.includes(eintrag[col])){
-            continue flowLogLoop
-          }
-          if (cat !=='' && col === 'category' && eintrag[col] !== cat){
-            continue flowLogLoop
-          }
-          if (item !=='' && col === 'item' && eintrag[col] !== item){
-            continue flowLogLoop
-          }
+          if (col === 'time' && start > eintrag[col]) { continue flowLogLoop }
+          if (col === 'time' && end < eintrag[col]) { continue flowLogLoop }
+          if (col === 'type' && !type_array.includes(eintrag[col])){ continue flowLogLoop }
+          if (col === 'role' && !role_array.includes(eintrag[col])){ continue flowLogLoop }
+          if (user !=='' && col === 'user' && eintrag[col] !== user){ continue flowLogLoop }
+          if (cat !=='' && col === 'category' && eintrag[col] !== cat){ continue flowLogLoop }
+          if (item !=='' && col === 'item' && eintrag[col] !== item){ continue flowLogLoop }
           const td = document.createElement('td');
           td.style.textAlign = 'center'
           td.textContent = eintrag[col] ?? "";  // falls ein Feld mal fehlt

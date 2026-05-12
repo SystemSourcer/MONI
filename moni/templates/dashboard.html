@@ -17,26 +17,29 @@
       {% if role == "master" %}
         <button type="button" onclick="window.location.href='/place_management'">Place Management</button>
         <button type="button" onclick="window.location.href='/balance_sheet'">Balance Sheet</button>
+        <button type="button" onclick="window.location.href='/settings'">Settings</button>
+        <button type="button" onclick="window.location.href='/test_print'">Test Printer</button>
       {% endif %}
       {% if (role == "organizer") or (role == "master") %}
         <button type="button" onclick="window.location.href='/input'">Input</button>
-        <button type="button" onclick="window.location.href='/set_price'">Set Price</button>
-        <button type="button" onclick="window.location.href='/settings'">Settings</button>
       {% endif %}
       {% if role == "negotiator" or role == "master" %}
         <button type="button" onclick="window.location.href='/order_place'">Order</button>
       {% endif %}
-      <button type="button" onclick="window.location.href='/issue'">Issue</button>
+      {% if settings['Issuer'] == 'Yes' %}
+        <button type="button" onclick="window.location.href='/issue'">Issue</button>
+      {% endif %}
       <button type="button" onclick="window.location.href='/logout'">Logout</button>
     </form>
       <h2>Inventory:</h2>
       {% for category, idl in inventory.items() %}
         <form method="post" action="/dashboard">
-          <label style="grid-column: 1 / span 2;" for="category">{{ category }}</label>
+          <label for="category">{{ category }}</label>
           <input type="hidden" name="category" id="category" value="{{ category }}">
           {% if (role == "organizer") or role == "master" %}
             <button type="submit" name="action" value="Output">Output</button>
             <button type="submit" name="action" value="Return">Return</button>
+            <button type="submit" name="action" value="Set_Price">Set Price</button>
           {% endif %}
         </form>
         <table>

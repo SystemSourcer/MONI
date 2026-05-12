@@ -51,7 +51,7 @@
             <input type="text" value="{{item['quantity']}}">
             <input style="grid-column: 3 / span 2" type="text" value="{{item['custom']}}">
         {% endfor %}
-        {% if auto_prep %}
+        {% if auto_prep != 'Off' %}
           <progress style="grid-column: 1 / span 3; border-radius: 10px; height: 30px" id="timeProgress_{{i}}" value="0" max="1200"></progress>
         {% else %}
           <span class="grid-spacer"></span> 
@@ -72,8 +72,12 @@
       document.getElementById("paid").disabled = true;
 
       let free = false
-      let pbar = document.getElementById("timeProgress_0")
-      const intervalId = setInterval(autoPrepare,100)
+
+      const auto_prep = "{{ auto_prep }}"
+      if ( auto_prep !== 'Off') {
+        var pbar = document.getElementById("timeProgress_0")
+        const intervalId = setInterval(autoPrepare,100)
+      }
     
     function enableOrder(){
       document.getElementById("giveOut").disabled = false;
@@ -89,7 +93,7 @@
     }
 
     function autoPrepare(){
-      pbar.value += 120 / parseInt("{{auto_prep}}")
+      pbar.value += 120 / parseInt(auto_prep)
       if (pbar.value == 1200){document.getElementById("PrepareButton_0").click()}
     }
 
