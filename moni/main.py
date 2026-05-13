@@ -511,24 +511,26 @@ def issue(request:Request):
     if not role: return RedirectResponse(url="/login")
     issue_order_key_list = [key for key, order in order_history.items() if order['issuer'] == user and order['issued'] == None]
     
-    if not prepare_order_key_list: 
+    if not issue_order_key_list: 
         prepare_order_key_list = [key for key, order in order_history.items() if order['organizer']!= None and order['issued'] == None]
         for n, key in enumerate(prepare_order_key_list):
             if n == 0: 
-                order_history[key]['organizer']
-                prepare_order_key_list = [key]
+                order_history[key]['issuer'] = user
+                issue_order_key_list = [key]
 
-            elif n < 10 and order_history[key]['place'] == order_history[prepare_order_key_list[0]]['palce']: 
-                order_history[key]['organizer'] = user
-                prepare_order_key_list.append(key)
+            elif n < 10 and order_history[key]['place'] == order_history[issue_order_key_list[0]]['palce']: 
+                order_history[key]['issuer'] = user
+                issue_order_key_list.append(key)
                 
-            if len(prepare_order_key_list) >= 3: break
+            if len(issue_order_key_list) >= 3: break
 
+
+    issue_order_list = [order_history[key] for key in issue_order_key_list]
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
 
-    return templates.TemplateResponse(request,"issue.html", {"order_key":order_key, "order": order_history[order_key]})
+    return templates.TemplateResponse(request,"issue.html", {"issue_order_key_list":issue_order_key_list, "issue_order_list": issue_order_list})
 
 @app.post("/issue")
 async def issue_post(request: Request):
@@ -545,43 +547,14 @@ async def issue_post(request: Request):
         order_history[last_issue_key]['issued'] = None
         if order_history[last_issue_key]['prepared'] == 'auto_issue_log': order_history[last_issue_key]['prepared'] = None
 
-        n = int(next(reversed(flow_log)))
-        for item in order_history[last_issue_key]['items']:
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':item['category'], 'item':item['item'], 'quantity':- int(item['quantity']), 'price':0}
-            for id in inventory[item['category']]:
-                if id['item'] == item['item']:
-                        id['quantity'] += int(item['quantity'])
-                        id['ordered'] += int(item['quantity'])
-
         response = RedirectResponse(url=f"/issue", status_code=status.HTTP_303_SEE_OTHER)
     
     else:   
         order_key = int(form.get("order_key"))
-        for field_name, value in form.items():
-            if 'category' in field_name:
-                n = int(next(reversed(flow_log)))
-                flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'order_stage_3', 'role':role, 'user': user, 'category':value}
-
-            elif 'item' in field_name:
-                flow_log[n+1]['item'] = value
-
-            elif 'quantity' in field_name: 
-                flow_log[n+1]['quantity'] = value
-                for idl in inventory.values():
-                    for id in idl:
-                        if id['item'] in field_name: 
-                            id['quantity'] -= int(value)
-                            id['ordered'] -= int(value)
         
         order = order_history[order_key]
         if order['prepared'] == None: order['prepared'] = 'auto_issue_log'
         order['issued'] = datetime.now().strftime("%Y-%m-%dT%H:%M")
-
-    with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
-        json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
-
-    with open("/workspace/data/flow_log.json", "w", encoding="utf-8") as flow_log_file:
-        json.dump(flow_log, flow_log_file, ensure_ascii=False, indent=2)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
@@ -616,7 +589,7 @@ async def post_test_print(request: Request):
     address = form.get("address")
     if settings_dict['Bon'] == 'On': print_bon(0,address) # 0 is the init system order
 
-    response = RedirectResponse(url=f"/test_ptint", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url=f"/test_print", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
