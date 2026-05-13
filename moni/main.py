@@ -42,7 +42,7 @@ def print_bon(order_key, address=None): #https://python-escpos.readthedocs.io/en
     printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
     printer.set(align='center')
     printer.textln(f'{keywords['place']}:')
-    printer.set(bold = True, custom_size=True, width=4, height=4)
+    printer.set(bold = True, custom_size=True, width=8, height=8)
     printer.textln(f'{order['place']}')
     printer.set(bold=False, custom_size=True, width=1, height=1)
     # printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3 # digital bon 7 ebon
