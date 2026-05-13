@@ -77,6 +77,7 @@
       if ( auto_prep !== 'Off') {
         var pbar = document.getElementById("timeProgress_0")
         var intervalId = setInterval(autoPrepare,100)
+        var intvalRl = setInterval(() => { location.reload(); }, parseInt(auto_prep) * 1000 + 5000);
       }
     
     function enableOrder(){
@@ -98,7 +99,8 @@
     }
 
     function addItem(name, max_quantity, ordered, pricePerUnit) {
-      clearInterval(intervalId); 
+      clearInterval(intervalId);
+      clearInterval(intervalRl);
       const form = document.getElementById('OutputForm');
       // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
       let item = document.querySelector(`input[name="${name}_item"]`);
