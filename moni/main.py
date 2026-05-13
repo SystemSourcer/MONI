@@ -14,13 +14,14 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Functions
-def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+def print_bon(order_key, address=None): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
     """ 
     Prits the order on the corresponding printer (via category)
     """
     order = order_history[order_key]
     keywords = keywords_dict[settings_dict['Bon_Language']]
-    printer = Network(settings_dict[f'Printer-{order['category']}'])
+    if address == None: printer = Network(settings_dict[f'Printer-{order['category']}'])
+    else: printer = Network(address)
     printer.profile.media['width']['pixels'] = 567 # or 384, depending to the printer
     printer.set(align='center', bold = True, custom_size=True, width=2, height=2)
     printer.textln(settings_dict['Event'])
@@ -46,6 +47,7 @@ def print_bon(order_key): #https://python-escpos.readthedocs.io/en/latest/api/es
     printer.set(bold=False, custom_size=True, width=1, height=1)
     # printer.qr(json.dumps(order, ensure_ascii=False, indent=2), size = 4,  center=True ) # defualt size = 3 # digital bon 7 ebon
     printer.cut(mode='PART', feed=False)
+    printer.close()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
@@ -76,7 +78,7 @@ try:
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
         settings_dict  = json.load(settings_file)
 
-except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': 'No', 'Bon': 'Yes', 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
+except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': 'Off', 'Bon': 'On', 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
 
 
 try:
@@ -243,9 +245,9 @@ def settings(request: Request):
 
     del_key_list = []
     for key in settings_dict.keys():
-        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'Yes': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
     
     for key in del_key_list:
         del [settings_dict[key]]
@@ -377,7 +379,7 @@ async def prepared_post(request: Request):
                 item_dict['ordered'] -= int(item['quantity'])
                 item_dict['quantity'] -= int(item['quantity'])
 
-    print_bon(order_key)
+    if settings_dict['Bon'] == 'On': print_bon(order_key)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
@@ -605,11 +607,11 @@ def test_print(request: Request):
     else: return templates.TemplateResponse(request, "test_print.html", {"error": "Bon printing is not activated..."})
 
 @app.post("/test_print")
-async def post_test_print(request: Request, printer:str):
+async def post_test_print(request: Request, address:str):
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
-    print_bon(0) # 0 is the init system order
+    if settings_dict['Bon'] == 'On': print_bon(0,address) # 0 is the init system order
 
     response = RedirectResponse(url=f"/test_ptint", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")

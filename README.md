@@ -23,11 +23,11 @@ docker build -t moni ./
 ### Start the Docker container:
 On WIndows (only without printers and qrcode)
 ```bash 
-docker run -it --rm -p 8000:8000 -e TZ=Continent/City C:\Path\to\GitHub\MONI:/workspace moni bash
+docker run -it --rm -p 8000:8000 -e TZ=Continent/City -v C:\Path\to\GitHub\MONI:/workspace moni bash
 ```
 On Linux (with all functions)
 ```bash 
-docker run -it --rm --net=host  -e TZ=Continent/City /Path/to/GitHub/MONI:/workspace moni bash
+docker run -it --rm --net=host  -e TZ=Continent/City -v /Path/to/GitHub/MONI:/workspace moni bash
 ```
 
 ### Creat password hashs

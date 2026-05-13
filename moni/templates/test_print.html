@@ -13,7 +13,7 @@
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form id="PrinterForm" method="post" action="/test_print">
       {% for printer in printers %}
-          <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="printer" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
+          <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
       {% endfor %}
     </form>
     <script>
