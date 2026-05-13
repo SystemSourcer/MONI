@@ -111,7 +111,7 @@ try:
     
     order_history = {int(k): v for k, v in order_history.items()} # because key are strings after loding but int wen createt thru the system
 
-except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantitiy':'2', 'custom':'No real Order'},{'category':'Init_1', 'item':'Init_1', 'quantitiy':'1', 'custom':'No real Order'},{'category':'Init_2', 'item':'Init_2', 'quantitiy':'3', 'custom':'No real Order'}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
+except: order_history = {0: {'place':'init', 'category':'Init', 'items':[{'category':'Init', 'item':'Init', 'quantity':'2', 'custom':'No real Order'},{'category':'Init_1', 'item':'Init_1', 'quantity':'1', 'custom':'No real Order'},{'category':'Init_2', 'item':'Init_2', 'quantity':'3', 'custom':'No real Order'}], 'negotiator':'System_n', 'organizer':'System_o' ,'issuer':'System_i', 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'issued':datetime.now().strftime("%Y-%m-%dT%H:%M")}}
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
