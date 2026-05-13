@@ -18,7 +18,7 @@
         {% endfor %}
         <hr>
       {% endfor %}
-      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-item="Token" data-quantity="{{ 100 }}" data-ordered="{{ 0 }}" data-price="{{ -1 }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
+       <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="Order-Token" data-item="Token" data-quantity="100" data-ordered="0" data-price="-1" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
       <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
     </form>
     <form id="OrderForm" method="post" action="order_goods">
