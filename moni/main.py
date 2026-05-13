@@ -489,10 +489,11 @@ async def order_goods_post(request: Request):
         for itemwise_order in itemwise_order_list:
             if itemwise_order['category'] == key: catwise_order.append(itemwise_order)
         
-        order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':None, 'issued': None}
-        if settings_dict[f'Direct_Print-{key}'] == 'On': 
-            order_history[n+1]['organizer'] = 'direct_print'
-            print_bon(n+1)
+        if catwise_order:
+            order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':None, 'issued': None}
+            if settings_dict[f'Direct_Print-{key}'] == 'On': 
+                order_history[n+1]['organizer'] = 'direct_print'
+                print_bon(n+1)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
