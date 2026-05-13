@@ -607,10 +607,13 @@ def test_print(request: Request):
     else: return templates.TemplateResponse(request, "test_print.html", {"error": "Bon printing is not activated..."})
 
 @app.post("/test_print")
-async def post_test_print(request: Request, address:str):
+async def post_test_print(request: Request):
+    form = await request.form()
+    
     role = request.cookies.get("role")
     user = request.cookies.get("user")
 
+    address = form.get("address")
     if settings_dict['Bon'] == 'On': print_bon(0,address) # 0 is the init system order
 
     response = RedirectResponse(url=f"/test_ptint", status_code=status.HTTP_303_SEE_OTHER)
