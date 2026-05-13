@@ -87,7 +87,7 @@ try:
 
 except:
     place_dict = dict()
-    for letter in ['A','B','C','D','E','F','G','H','To_Go']:
+    for letter in ['A','B','C','D','E','F','G','H','ToGo']:
         for number in range(10):
             place_dict[letter+'-'+str(number)]=False
 
