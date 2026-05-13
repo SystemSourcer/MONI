@@ -87,9 +87,9 @@ try:
 
 except:
     place_dict = dict()
-    for letter in ['A','B','C','D','E','F','G','H']:
+    for letter in ['A','B','C','D','E','F','G','H','To_Go']:
         for number in range(10):
-            place_dict[letter+str(number)]=False
+            place_dict[letter+'-'+str(number)]=False
 
 try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
@@ -245,10 +245,11 @@ def settings(request: Request):
 
     del_key_list = []
     for key in settings_dict.keys():
-        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Direct_Print-' in key and key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'On': del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Printer-' in key and (key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Direct_Print-' in key and (key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Auto_Prepare-' in key and (key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
     
+    print(del_key_list)
     for key in del_key_list:
         del [settings_dict[key]]
 
@@ -489,6 +490,9 @@ async def order_goods_post(request: Request):
             if itemwise_order['category'] == key: catwise_order.append(itemwise_order)
         
         order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':None, 'issued': None}
+        if settings_dict[f'Direct_Print-{key}'] == 'On': 
+            order_history[n+1]['organizer'] = 'direct_print'
+            print_bon(n+1)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
