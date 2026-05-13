@@ -474,7 +474,9 @@ async def order_goods_post(request: Request):
             itemwise_order['quantity'] = value
             for idl in inventory.values():
                 for id in idl:
-                    if id['item'] in field_name: id['ordered'] += int(value)
+                    if id['item'] in field_name:
+                        if settings_dict[f'Direct_Print-{flow_log[n+1]['category']}'] == 'On': id['quantity'] -= int(value)
+                        else: id['ordered'] += int(value)
             
         elif 'price' in field_name:
             flow_log[n+1]['price'] = value 
