@@ -237,7 +237,7 @@ async def set_price_post(request: Request):
 def settings(request: Request):
     role = request.cookies.get("role")
     if not role: return RedirectResponse(url="/login")
-    if settings_dict['Bon'] == 'Yes':
+    if settings_dict['Bon'] == 'On':
         for key in inventory.keys():
             if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = 'None'  # None or Ip-Adress
             if f'Direct_Print-{key}' not in settings_dict: settings_dict[f'Direct_Print-{key}'] = 'Off' # True or False
