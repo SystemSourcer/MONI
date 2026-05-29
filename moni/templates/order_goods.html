@@ -2,24 +2,24 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Order Goods for: {{place}}</h1>
+    <h1>Order for: {{place}}</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
       <form class="button-grid">
+      <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" data-category="Order-Token" data-item="Token" data-quantity="100" data-ordered="0" data-price="-1" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
+      <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
       {% for category in inventory %}
         {% for item_dict in inventory[category] %}
           {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-            <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+            <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
           {% endif %}
         {% endfor %}
-        <hr>
       {% endfor %}
-       <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-category="Order-Token" data-item="Token" data-quantity="100" data-ordered="0" data-price="-1" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
-      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
     </form>
     <form id="OrderForm" method="post" action="order_goods">
       <input type="hidden" name="place" value="{{place}}">
@@ -75,6 +75,7 @@
         item = document.createElement('input');
         item.name = `${name}_item`
         item.value = name;
+        item.readOnly = true;
         quantity = document.createElement('input');
         quantity.type = 'number';
         quantity.name = `${name}_quantity`;  
