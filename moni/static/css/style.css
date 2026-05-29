@@ -28,6 +28,7 @@ form {
 
 form.place-grid{
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 0.5dvw 0.5dvw
 }
 
 form.button-grid{
@@ -53,7 +54,7 @@ body.dark-mode form{
 /* Eingabefelder */
 input {
   width: 100%;
-  padding: 0.4rem 0.5rem;
+  padding: 0.5dvw;
   box-sizing: border-box;
   text-align: center;
   font-size: 1rem;
@@ -66,7 +67,7 @@ body.dark-mode input{
 
 button {
   font-size: 1rem;
-  padding: 0.5rem;
+  padding: 0.5dvw;
 }
 
 table { 
@@ -116,6 +117,14 @@ body.dark-mode th {
   border-radius: 0.4rem; 
 }
 
+.time-date-clock {
+  font-size: 2rem;
+  position: fixed; 
+  top: 1rem; 
+  right:10rem; 
+  z-index: 1000; 
+}
+
 /* noto-sans-regular - latin */
 @font-face {
   font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
@@ -123,4 +132,14 @@ body.dark-mode th {
   font-style: normal;
   font-weight: 400;
   src: url('../fonts/noto-sans-v42-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+@media print {
+  tfoot {
+    display: table-footer-group;
+  }
+  
+  .icon-moni {
+    display: none;
+  }
 }
