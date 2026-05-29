@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Output</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
@@ -12,13 +13,13 @@
     <p>Just touch or click the correstbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form class="button-grid">
+      <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" data-item="Token" data-quantity="{{ 100 }}" data-ordered="{{ 0 }}" data-price="{{ -1 }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
+      <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
       {% for item_dict in assortment %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-          <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-'~category]}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
         {% endif %}
       {% endfor %}
-      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" data-item="Token" data-quantity="{{ 100 }}" data-ordered="{{ 0 }}" data-price="{{ -1 }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
-      <button style="font-size : 2dvw; width: 12dvw; height: 15dvh;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
     </form>
     <form id="OutputForm" method="post" action="/output">
       <label>Item:</label>
@@ -52,7 +53,7 @@
             <input type="text" value="{{item['quantity']}}">
             <input style="grid-column: 3 / span 2" type="text" value="{{item['custom']}}">
         {% endfor %}
-        {% if auto_prep != 'Off' %}
+        {% if settings['Auto_Prepare-'~category] != 'Off' %}
           <progress style="grid-column: 1 / span 3; border-radius: 10px; height: 30px" id="timeProgress_{{i}}" value="0" max="1200"></progress>
         {% else %}
           <span class="grid-spacer"></span> 
@@ -74,7 +75,7 @@
 
       let free = false
 
-      const auto_prep = "{{ auto_prep }}"
+      const auto_prep = "{{settings['Auto_Prepare-'~category]}}"
       if ( auto_prep !== 'Off') {
         var pbar = document.getElementById("timeProgress_0")
         var intervalId = setInterval(autoPrepare,100)
@@ -114,6 +115,7 @@
         item = document.createElement('input');
         item.name = `${name}_item`
         item.value = name;
+        item.readOnly = true;
         quantity = document.createElement('input');
         quantity.type = 'number';
         quantity.name = `${name}_quantity`;  
