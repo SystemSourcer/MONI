@@ -3,12 +3,14 @@
   <head>
     <meta http-equiv="refresh" content="60">
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <div style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%);">
+    <div class="time-date-clock" id="clock"></div>
+    <div style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%)">
       <img src="/static/images/qrcode.png" style="width: 150px;" />
     </div>
     <div class="icon-dark" onclick="setDMode()"><h1>Dark<h1></div>
@@ -77,6 +79,14 @@
         }
         element.classList.toggle("dark-mode")
       }
+
+
+      function updateClock() {
+        document.getElementById("clock").innerHTML = new Date().toLocaleDateString('en-gb', {year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false})
+      }
+
+      setInterval(updateClock, 1000)
+
     </script>
   </body>
 </html>
