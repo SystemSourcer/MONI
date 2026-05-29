@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
@@ -16,11 +17,40 @@
       <label>Value:</label>
       <label>New Value:</label>
       <span class="grid-spacer"></span>
-      {% for option, value in settings.items() %}
-        <input id="{{ option }}_option" value="{{ option}}" readonly>
-        <input id="{{ option }}_value" value="{{ value }}" readonly>
-        <input name="{{ option }}" id="{{ option }}_new_price" value="{{ value }}" required>
-        <span class="grid-spacer"></span>
+      {% for option, val in settings.items() %}
+        {% if 'Color-' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input type="color" id="{{ option }}_value" value="{{ val }}" disabled>
+          <input type="color" name="{{ option }}" id="{{ option }}_new_val" value="{{ val }}" required>
+          <span class="grid-spacer"></span>
+        {% elif 'Order_' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly> 
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="Off" {% if val == "Off" %} selected {% endif %}>Off</option>
+            <option value="Order" {% if val == "Order" %} selected {% endif %}>Order</option>
+            <option value="Prepare" {% if val == "Prepare" %} selected {% endif %}>Prepare</option>
+          </select>
+          <span class="grid-spacer"></span>          
+        {% elif 'Output_' in option or 'Issuer' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly>
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="Off" >Off</option>
+            <option value="On" {% if val == "On" %} selected {% endif %}>On</option>
+          </select>
+          <span class="grid-spacer"></span>
+        {% elif 'Auto_Prepare-' in option or 'Row_Chars' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input type="number" id="{{ option }}_value" value="{{ val }}" readonly>
+          <input type="number" name="{{ option }}" id="{{ option }}_new_val" min="0" max="120" step="1" value="{{ val }}" required>
+          <span class="grid-spacer"></span>
+        {% else %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly>
+          <input name="{{ option }}" id="{{ option }}_new_val" value="{{ val }}" >
+          <span class="grid-spacer"></span>
+        {% endif %}
       {% endfor %}
       <span class="grid-spacer"></span> 
       <span class="grid-spacer"></span> 
