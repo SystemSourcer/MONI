@@ -14,9 +14,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Functions
-def print_bon(order_key, address=None): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+def print_order(order_key, address=None): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
     """ 
-    Prits the order on the corresponding printer (via category)
+    Prits the order on the corresponding printer (via category or addres if given)
     """
     order = order_history[order_key]
     keywords = keywords_dict[settings_dict['Bon_Language']]
@@ -49,6 +49,26 @@ def print_bon(order_key, address=None): #https://python-escpos.readthedocs.io/en
     printer.cut(mode='PART', feed=False)
     printer.close()
 
+def print_message(message, address): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
+    """ 
+    Prits the order on the corresponding printer (via category or addres if given)
+    """
+    keywords = keywords_dict[settings_dict['Bon_Language']]
+    printer = Network(address)
+    printer.profile.media['width']['pixels'] = 567 # or 384, depending to the printer
+    printer.set(align='center', bold = True, custom_size=True, width=2, height=2)
+    printer.textln(keywords['message'])
+    printer.set(bold=False, custom_size=True, width=1, height=1)
+    printer.textln(keywords['from'] + message['user'])
+    printer.set(align='left')
+    printer.ln(1)
+    printer.textln(datetime.now().strftime("%d. %B %Y %H:%M"))
+    printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
+    printer.textln(message['content'])
+    printer.textln("-" * int(settings_dict['Bon_Row_Chars']))
+    printer.cut(mode='PART', feed=False)
+    printer.close()
+
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
 ip_addr = s.getsockname()[0]
@@ -70,15 +90,15 @@ role_dict = {
     'issuer': {'password': '90dace0b9ded9e083f602834e45aaaec05623d928d85dd41e61f70f9229629ad93ff29ecf6a2e3039f354cd94b279c50f63c2cee3c176c07126d028ee39bb705'},
 }
 
-keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'Negotiator', 'organizer':'Preparer'}, 
-                 'German':{'order':'Bestellung', 'place':'Platz', 'negotiator':'Besteller', 'organizer':'Vorbereiter' }
+keywords_dict = {'English':{'order':'Order', 'place':'Place', 'negotiator':'Negotiator', 'organizer':'Preparer', 'message':'Message', 'from':'from'}, 
+                 'German':{'order':'Bestellung', 'place':'Platz', 'negotiator':'Besteller', 'organizer':'Vorbereiter', 'message':'Nachricht', 'from':'von'}
                 }
 
 try: 
     with open("/workspace/data/settings.json", "r", encoding="utf-8") as settings_file:
         settings_dict  = json.load(settings_file)
 
-except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': 'Off', 'Bon': 'On', 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
+except: settings_dict = {'Event':'MONI-Event', 'Host':'Musikverein Scharnestetten e.V. 1925', 'Issuer': 'Off', 'Bon_Language': 'German', 'Bon_Row_Chars': 48}
 
 
 try:
@@ -86,8 +106,8 @@ try:
         place_dict  = json.load(place_file)
 
 except:
-    place_dict = dict()
-    for letter in ['A','B','C','D','E','F','G','H','ToGo']:
+    place_dict = {'To-Go':False, 'Take':False, 'cat_1':False, 'cat_2':False, 'cat_3':False, 'cat_4':False, 'cat_5':False, 'cat_6':False, 'cat_7':False, 'cat_8':False}
+    for letter in ['A','B','C','D','E','F','G','H']:
         for number in range(10):
             place_dict[letter+'-'+str(number)]=False
 
@@ -136,18 +156,25 @@ def login_post(request: Request, role: str = Form(...), user: str = Form(...), p
 
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
+    response.set_cookie(key="password", value=hashlib.sha512((password).encode()).hexdigest(), httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
 
 @app.get("/dashboard")
 def dashboard(request: Request):
     role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
     user = request.cookies.get("user")
-    if not role: return RedirectResponse(url="/login") 
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request, "dashboard.html", {"role": role, "user": user, "inventory":inventory, "settings": settings_dict})
 
 @app.post("/dashboard")
 def dashboard_post(request: Request, category: str = Form(...), action: str = Form(...)):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     cat_param = quote_plus(category)
     if action == "Output":
         response = RedirectResponse(url=f"/output?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
@@ -158,8 +185,6 @@ def dashboard_post(request: Request, category: str = Form(...), action: str = Fo
     if action == "Set_Price":
         response = RedirectResponse(url=f"/set_price?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
 
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
@@ -173,16 +198,31 @@ def logout():
 @app.get("/input")
 def input(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login")
     return templates.TemplateResponse(request, "input.html", {"inventory": inventory})
 
 @app.post("/input")
 def input_post(request: Request, category: str = Form(...), item: str = Form(...), quantity: str = Form(...)):
     role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
     user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
 
-    if category not in inventory.keys(): inventory[category] = list()
-    
+    if category not in inventory.keys(): 
+        inventory[category] = list()
+        place_added = False
+        for key in list(place_dict.keys()):
+            if 'cat' in key and not place_added: 
+                place_dict[category] = place_dict.pop(key)
+                place_added = True
+
+                with open("/workspace/data/place.json", "w", encoding="utf-8") as place_file:
+                    json.dump(place_dict, place_file, ensure_ascii=False, indent=2)
+
+            else: place_dict[key] = place_dict.pop(key)
+
     if item not in [id['item'] for id in inventory[category]]:
         inventory[category].append({'item':item,'quantity':0,'ordered':0,'price':0})
 
@@ -209,11 +249,18 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
 @app.get("/set_price")
 def set_price(request: Request, category: str):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request, "set_price.html", {"assortment": inventory[category]})
 
 @app.post("/set_price") 
 async def set_price_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
 
     for field_name, value in form.items():
@@ -226,8 +273,6 @@ async def set_price_post(request: Request):
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
         json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
 
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -236,20 +281,27 @@ async def set_price_post(request: Request):
 @app.get("/settings")
 def settings(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
-    if settings_dict['Bon'] == 'On':
-        for key in inventory.keys():
-            if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = 'None'  # None or Ip-Adress
-            if f'Direct_Print-{key}' not in settings_dict: settings_dict[f'Direct_Print-{key}'] = 'Off' # True or False
-            if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = 'Off' # None or time in seconds
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+    
+    for key in inventory.keys():
+        if f'Color-{key}' not in settings_dict: settings_dict[f'Color-{key}'] = ''  # color code
+        if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = ''  # Off or Ip-Adress
+        if f'Order_Bon-{key}' not in settings_dict: settings_dict[f'Order_Bon-{key}'] = 'Off' # Off, Order or Prepare
+        if f'Output_Bon-{key}' not in settings_dict: settings_dict[f'Output_Bon-{key}'] = 'Off' # Off or On
+        if f'Auto_Prepare-{key}' not in settings_dict: settings_dict[f'Auto_Prepare-{key}'] = '0' # time in seconds
+
 
     del_key_list = []
     for key in settings_dict.keys():
-        if 'Printer-' in key and (key.removeprefix('Printer-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Direct_Print-' in key and (key.removeprefix('Direct_Print-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
-        if 'Auto_Prepare-' in key and (key.removeprefix('Auto_Prepare-') not in inventory.keys() or settings_dict['Bon'] != 'On'): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Color-' in key and key.removeprefix('Color-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Order_Bon-' in key and key.removeprefix('Order_Bon-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Output_Bon-' in key and key.removeprefix('Output_Bon-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
+        if 'Auto_Prepare-' in key and key.removeprefix('Auto_Prepare-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
     
-    print(del_key_list)
+    #print(del_key_list)
     for key in del_key_list:
         del [settings_dict[key]]
 
@@ -257,9 +309,15 @@ def settings(request: Request):
 
 @app.post("/settings")
 async def settings_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
 
     for field_name, value in form.items():
+        if value == "#000000": value = '' # if no value choosen, then empy sring... this wil lead to deafult in java scipt
         print(f"New setting for {field_name}: {value}")
         settings_dict[field_name] = value
 
@@ -268,8 +326,6 @@ async def settings_post(request: Request):
     with open("/workspace/data/settings.json", "w", encoding="utf-8") as settings_file:
         json.dump(settings_dict, settings_file, ensure_ascii=False, indent=2)    
 
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -278,19 +334,24 @@ async def settings_post(request: Request):
 @app.get("/place_management")
 def place_management(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request, "place_management.html", {"place_dict": place_dict})
 
 @app.post("/place_management") 
 async def place_management_post(request: Request, place: str = Form(...)):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     if place_dict[place] == True: place_dict[place] = False
     else: place_dict[place] = True
 
     with open("/workspace/data/place.json", "w", encoding="utf-8") as place_file:
         json.dump(place_dict, place_file, ensure_ascii=False, indent=2)
-    
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
+
     response = RedirectResponse(url="/place_management", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
@@ -299,8 +360,9 @@ async def place_management_post(request: Request, place: str = Form(...)):
 @app.get("/output")
 def output(request: Request, category: str):
     role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
     user = request.cookies.get("user")
-    if not role: return RedirectResponse(url="/login")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
 
     prepare_order_key_list = [key for key, order in order_history.items() if order['organizer'] == user and order['prepared'] == None]
     # print(prepare_order_key_list)
@@ -321,16 +383,19 @@ def output(request: Request, category: str):
 
     prepare_order_list = [order_history[key] for key in prepare_order_key_list]
 
-    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "prepare_order_key_list":prepare_order_key_list, "prepare_order_list": prepare_order_list, "auto_prep":settings_dict[f'Auto_Prepare-{category}']})
+    return templates.TemplateResponse(request, "output.html", {"category":category, "assortment": inventory[category], "prepare_order_key_list":prepare_order_key_list, "prepare_order_list": prepare_order_list, "settings": settings_dict})
 
 @app.post("/output")
 async def output_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
     print(form)
     category = form.get("category")
     print(category)
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
 
     for field_name, value in form.items():
         if 'item' in field_name:
@@ -360,15 +425,17 @@ async def output_post(request: Request):
 
 @app.post("/prepared")
 async def prepared_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
     print(form)
 
     order_key = int(form.get("order_key"))
     category = form.get("category")
     print(category)
-
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
 
     order = order_history[order_key]
     order['organizer'] = user
@@ -380,7 +447,7 @@ async def prepared_post(request: Request):
                 item_dict['ordered'] -= int(item['quantity'])
                 item_dict['quantity'] -= int(item['quantity'])
 
-    if settings_dict['Bon'] == 'On': print_bon(order_key)
+    if settings_dict[f'Order_Print-{category}'] == 'Prepare': print_order(order_key)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
@@ -394,19 +461,22 @@ async def prepared_post(request: Request):
 @app.get("/return")
 def output_return(request: Request, category: str):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request, "return.html", {"category":category, "assortment": inventory[category]})
 
 @app.post("/return")
 async def return_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
     print(form)
     category = form.get("category")
 
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
-
-    
     for field_name, value in form.items():
         if 'item' in field_name:
             n = int(next(reversed(flow_log)))
@@ -435,26 +505,36 @@ async def return_post(request: Request):
 @app.get("/balance_sheet")
 def balance_sheet(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request,"balance_sheet.html", {"flow_log": flow_log, "inventory": inventory})
 
 @app.get("/order_place")
 def order_place(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     return templates.TemplateResponse(request,"order_place.html", {"place_dict": place_dict})
 
 @app.post("/order_place") 
 async def order_place_post(request: Request, place: str = Form(...)):
-    return templates.TemplateResponse(request,"order_goods.html", {"inventory": inventory, "place": place})
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+    return templates.TemplateResponse(request,"order_goods.html", {"place": place, "inventory": inventory, "settings": settings_dict})
 
 @app.post("/order_goods")
 async def order_goods_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
     print(form)
-
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
 
     itemwise_order_list = []
     for field_name, value in form.items():
@@ -475,7 +555,7 @@ async def order_goods_post(request: Request):
             for idl in inventory.values():
                 for id in idl:
                     if id['item'] in field_name:
-                        if settings_dict[f'Direct_Print-{flow_log[n+1]['category']}'] == 'On': id['quantity'] -= int(value)
+                        if settings_dict[f'Order_Bon-{flow_log[n+1]['category']}'] == 'Order': id['quantity'] -= int(value)
                         else: id['ordered'] += int(value)
             
         elif 'price' in field_name:
@@ -493,9 +573,9 @@ async def order_goods_post(request: Request):
         
         if catwise_order:
             order_history[n+1] = {'place':form.get('place'), 'category':key,  'items':catwise_order, 'negotiator':user, 'organizer':None, 'issuer':None, 'ordered':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'prepared':None, 'issued': None}
-            if settings_dict[f'Direct_Print-{key}'] == 'On': 
+            if settings_dict[f'Order_Bon-{key}'] == 'Order': 
                 order_history[n+1]['organizer'] = 'direct_print'
-                print_bon(n+1)
+                print_order(n+1)
 
     with open("/workspace/data/order_history.json", "w", encoding="utf-8") as order_hisotry_file:
         json.dump(order_history, order_hisotry_file, ensure_ascii=False, indent=2)
@@ -514,8 +594,10 @@ async def order_goods_post(request: Request):
 @app.get("/issue")
 def issue(request:Request):
     role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
     user = request.cookies.get("user")
-    if not role: return RedirectResponse(url="/login")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     issue_order_key_list = [key for key, order in order_history.items() if order['issuer'] == user and order['issued'] == None]
     
     if not issue_order_key_list: 
@@ -541,13 +623,15 @@ def issue(request:Request):
 
 @app.post("/issue")
 async def issue_post(request: Request):
+    role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
     form = await request.form()
     print(form)
 
     action = form.get("action")
-
-    role = request.cookies.get("role")
-    user = request.cookies.get("user")
 
     if action == "Issue_Last":
         last_issue_key = [key for key, i in order_history.items() if i['issuer'] == user and i['issued'] != None ][-1]
@@ -576,33 +660,35 @@ async def issue_post(request: Request):
 @app.get("/test_print")
 def test_print(request: Request):
     role = request.cookies.get("role")
-    if not role: return RedirectResponse(url="/login")
-    if settings_dict['Bon']:
-        printer_list = []
-        for key, val in settings_dict.items():
-            if 'Printer-' in key: printer_list.append({'printer':key, 'address':val}) 
- 
+    pasword = request.cookies.get("password")
+    user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+   
+    printer_list = []
+    for key, val in settings_dict.items():
+        if 'Printer-' in key and val != '': printer_list.append({'printer':key, 'address':val}) 
+
+    if printer_list:
         return templates.TemplateResponse(request,"test_print.html", {"printers": printer_list})
-    
-    else: return templates.TemplateResponse(request, "test_print.html", {"error": "Bon printing is not activated..."})
+    else:
+        return templates.TemplateResponse(request, "test_print.html", {"error": "Bon printing is not activated..."})
 
 @app.post("/test_print")
 async def post_test_print(request: Request):
-    form = await request.form()
-    
     role = request.cookies.get("role")
+    pasword = request.cookies.get("password")
     user = request.cookies.get("user")
+    if not role or pasword != role_dict[role]["password"]: return RedirectResponse(url="/login") 
+
+    form = await request.form()
 
     address = form.get("address")
-    if settings_dict['Bon'] == 'On': print_bon(0,address) # 0 is the init system order
+    print_order(0,address) # 0 is the init system order
 
     response = RedirectResponse(url=f"/test_print", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")
     return response
-
-
-
 
 
 
