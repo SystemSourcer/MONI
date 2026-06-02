@@ -119,7 +119,7 @@ body.dark-mode th {
 
 .time-date-clock {
   font-size: 2rem;
-  position: fixed; 
+  position: absolute; 
   top: 1rem; 
   right:10rem; 
   z-index: 1000; 
