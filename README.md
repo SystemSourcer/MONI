@@ -11,6 +11,14 @@ However, even shortly after development began, the thinking went beyond this ini
 Instead of using [Tkinter](https://docs.python.org/fr/3/library/tkinter.html) to design a local GUI, the decision was made to to work with HTML.  
 This enabels a multi-user environment within a local network. 
 
+## Supported Features
+
+- Complete digital System with four roles
+- Optional support for thermal printers via [python-escpos](https://github.com/python-escpos/python-escpos)
+- Logging all I/O actions and creation of a balance or overview
+- Ordersystem with palce / tabel management
+- More features are in developent
+
 ## Getting Started
 
 ### Build Docker image:
@@ -51,6 +59,7 @@ This project / repo was developed by SystemSourcer.
 ## License (LRU)
 The entire project is under a LRU  (limited right of use) License. 
 More information in the [License file](LICENSE.md)...
+A license for commercial use can be obtained by contacting the developer. The costs will be one-tenth of one percent of the revenue recorded during use.
 
 ## Acknowledgments
 This project would not have been possible without the support of the [Musikverein Scharenstetten e.V. 1925](https://mv-scharenstetten.de/). I am deeply grateful for their initiative in conceiving this project and their ongoing dedication to its success. Their collaborative spirit and constructive feedback have significantly contributed to the quality and direction of this work.  

@@ -1,7 +1,7 @@
 cff-version: 1.2.1
 message: "If you use this Software, please cite as follows:"
-title: "MONI"
-version: 0.2.23
+title: "Main Organsisational Networking Interface - MONI"
+version: 0.2.24
 authors:
   - family-names: "Mielke"
     given-names: "Simon"
