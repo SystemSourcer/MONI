@@ -142,7 +142,7 @@ try:
     with open("/workspace/data/inventory.json", "r", encoding="utf-8") as inventory_file:
         inventory = json.load(inventory_file)
 
-except: inventory = dict()
+except: inventory = {'System':[{'item':'Token','quantity':1000,'ordered':0,'price':1}]}
 
 try:
     with open("/workspace/data/flow_log.json", "r", encoding="utf-8") as flow_log_file:
@@ -327,6 +327,7 @@ def settings(request: Request):
     if not role or password != role_dict[role]["password"]: return RedirectResponse(url="/login") 
     
     for key in inventory.keys():
+        if f'Order-{key}' not in settings_dict: settings_dict[f'Order-{key}'] = 'Off'  # color code
         if f'Color-{key}' not in settings_dict: settings_dict[f'Color-{key}'] = ''  # color code
         if f'Printer-{key}' not in settings_dict: settings_dict[f'Printer-{key}'] = ''  # Off or Ip-Adress
         if f'Order_Bon-{key}' not in settings_dict: settings_dict[f'Order_Bon-{key}'] = 'Off' # Off, Order or Prepare
@@ -335,6 +336,7 @@ def settings(request: Request):
 
     del_key_list = []
     for key in settings_dict.keys():
+        if 'Order-' in key and key.removeprefix('Order-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
         if 'Color-' in key and key.removeprefix('Color-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
         if 'Printer-' in key and key.removeprefix('Printer-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
         if 'Order_Bon-' in key and key.removeprefix('Order_Bon-') not in inventory.keys(): del_key_list.append(key) # remove settings for no longer existing categorys
@@ -448,8 +450,12 @@ async def output_post(request: Request):
 
     for field_name, value in form.items():
         if 'item' in field_name:
+            if 'ret' in field_name: out_type = 'Return'
+            else: out_type = 'Output'
+            if 'free' in field_name: out_type = out_type + '_free'
+            
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'output', 'role':role, 'user': user, 'category':category, 'item':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':out_type, 'role':role, 'user': user, 'category':category, 'item':value}
 
         elif 'quantity' in field_name: 
             flow_log[n+1]['quantity'] = value
