@@ -1,1 +1,10 @@
-{}
+{
+  "System": [
+    {
+      "item": "Token",
+      "quantity": 1000,
+      "ordered": 0,
+      "price": "1"
+    }
+  ]
+}
