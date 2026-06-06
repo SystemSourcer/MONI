@@ -23,7 +23,7 @@
           <input type="color" id="{{ option }}_value" value="{{ val }}" disabled>
           <input type="color" name="{{ option }}" id="{{ option }}_new_val" value="{{ val }}" required>
           <span class="grid-spacer"></span>
-        {% elif 'Order_' in option %}
+        {% elif 'Order_Bon' in option %}
           <input id="{{ option }}_option" value="{{ option}}" readonly>
           <input id="{{ option }}_value" value="{{ val }}" readonly> 
           <select name="{{ option }}" id="{{ option }}_new_val" required>
@@ -32,7 +32,7 @@
             <option value="Prepare" {% if val == "Prepare" %} selected {% endif %}>Prepare</option>
           </select>
           <span class="grid-spacer"></span>          
-        {% elif 'Output_' in option or 'Issuer' in option %}
+        {% elif 'Output_Bon' in option or 'Issuer' in option or 'Order' in option %}
           <input id="{{ option }}_option" value="{{ option}}" readonly>
           <input id="{{ option }}_value" value="{{ val }}" readonly>
           <select name="{{ option }}" id="{{ option }}_new_val" required>
