@@ -13,8 +13,8 @@
     <p>Just touch or click the correstbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form class="button-grid">
-      <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" data-item="Token" data-quantity="{{ 100 }}" data-ordered="{{ 0 }}" data-price="{{ -1 }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
       <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
+      <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togret" onclick="toggleRet()" >Return</button>
       {% for item_dict in assortment %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
           <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-'~category]}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
@@ -75,6 +75,7 @@
       document.getElementById("paid").disabled = true;
 
       let free = false
+      let ret = false
 
       const auto_prep = "{{settings['Auto_Prepare-'~category]}}"
       if ( auto_prep !== 'Off') {
@@ -92,9 +93,18 @@
     function toggleFree(){
       free = !free 
       if (free){
-        document.getElementById("togfree").style.background='#00a817';
+        document.getElementById("togfree").style.background='#23e1eb';
       } else {
         document.getElementById("togfree").style.background='';
+      }
+    }
+
+    function toggleRet(){
+      ret = !ret 
+      if (ret){
+        document.getElementById("togret").style.background='#256be6';
+      } else {
+        document.getElementById("togret").style.background='';
       }
     }
 
@@ -107,28 +117,32 @@
       clearInterval(intervalId);
       clearInterval(intervalRl);
       const form = document.getElementById('OutputForm');
-      // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
-      let item = document.querySelector(`input[name="${name}_item"]`);
-      let quantity = document.querySelector(`input[name="${name}_quantity"]`);
-      let price    = document.querySelector(`input[name="${name}_price"]`);
+      let term = ''
+      if (free) {term = `${term}_free`}
+      if (ret) {term = `${term}_ret`}
+      let item = document.querySelector(`input[name="${name}_item${term}"]`);
+      let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
+      let price    = document.querySelector(`input[name="${name}_price${term}"]`);
       let total = document.querySelector(`input[name="total"]`);
+
+
 
       // Falls es noch nicht existiert, anlegen
       if (!item) {
         item = document.createElement('input');
-        item.name = `${name}_item`
+        item.name = `${name}_item${term}`
         item.value = name;
         item.readOnly = true;
         quantity = document.createElement('input');
         quantity.type = 'number';
-        quantity.name = `${name}_quantity`;  
+        quantity.name = `${name}_quantity${term}`;  
         quantity.value = "0";
-        quantity.min = "1";
+        quantity.min = "-100";
         quantity.max = max_quantity - ordered;
         quantity.step = "1";
         price = document.createElement('input');
         price.type = 'text';
-        price.name = `${name}_price`;  
+        price.name = `${name}_price${term}`;  
         price.value = "0";
         price.readOnly = true;
         const gridSpacer = document.createElement('span');
@@ -166,7 +180,11 @@
       }
       // Wert erhöhen
       const current = parseInt(quantity.value || "0", 10);
+      if (ret) {
+      quantity.value = current - 1  
+      } else {
       quantity.value = Math.min(current + 1, parseInt(max_quantity) - parseInt(ordered));
+      }
 
       const q = parseFloat(quantity.value);
       if (free) {
