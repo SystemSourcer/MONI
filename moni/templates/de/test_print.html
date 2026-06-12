@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Printer</title>
+    <title>Drucker-Test</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Test Printer</h1>
-    <h2>Here you can see the configured printers, configuration can be changed in settings.</h2>
-    <p>Just touch or click the correstbonding button to test the printer.</p>
+    <h1>Drucker-Test</h1>
+    <h2>Hier sehen Sie die konfigurierten Drucker. Die Konfiguration kann in den Einstellungen geändert werden.</h2>
+    <p>Tippen oder klicken Sie einfach auf die entsprechende Schaltfläche, um den Drucker zu testen.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form id="PrinterForm" method="post" action="/test_print">
       {% for printer in printers %}

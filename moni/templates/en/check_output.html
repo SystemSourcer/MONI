@@ -10,7 +10,7 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Check Output</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form id="CheckForm" method="post" action="check_output">
+    <form id="CheckForm" method="post">
       <input type="hidden" name="place" value="{{place}}">
       <label>Item:</label>
       <label>Quantity:</label>
@@ -21,11 +21,12 @@
           <input type="hidden", name="{{field_name}}" value="{{field_value}}" >
         {% else%}
           <input type="text", name="{{field_name}}" value="{{field_value}}" readonly>
+          {% if 'price' in field_name %} <span class="grid-spacer"></span> {% endif %}
         {% endif %}
       {% endfor %}
       <hr id="hrForm">
-      <button type="submit" name="check" id="check_false" value="resubmit" >Resubmit</button>
-      <button type="submit" name="check" id="check_true" value="next" >Next</button>
+      <button type="submit" formaction="/output" name="check" id="check_false" value="resubmit" >Resubmit</button>
+      <button type="submit" formaction="/check_output" name="check" id="check_true" value="next" >Next</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="{{last_form['total']}}" readonly>
     </form>

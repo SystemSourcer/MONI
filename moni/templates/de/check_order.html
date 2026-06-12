@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prüfe Bestellung</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Prüfe Bestellung</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form id="CheckForm" method="post">
+      <input type="hidden" name="place" value="{{place}}">
+      <label>Artikel:</label>
+      <label>Menge:</label>
+      <label>Preis in €:</label>
+      <label>Zusatz:</label>
+      {% for field_name, field_value in last_form.items() %}
+        {% if 'place' in field_name or 'category' in field_name or 'total' in field_name or 'uuid' in field_name %}
+          <input type="hidden", name="{{field_name}}" value="{{field_value}}" >
+        {% else%}
+          <input type="text", name="{{field_name}}" value="{{field_value}}" readonly>
+        {% endif %}
+      {% endfor %}
+      <hr id="hrForm">
+      <button type="submit" formaction="/order_goods" name="check" id="check_false" value="resubmit" >Erneut Abschicken</button>
+      <button type="submit" formaction="/check_order" name="check" id="check_true" value="next" >Weiter</button>
+      <label>Gesamt in €:</label>
+      <input type="text" name="total" value="{{last_form['total']}}" readonly>
+    </form>
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+      document.getElementById("check_false").disabled = true;
+      document.getElementById("check_true").disabled = true;
+
+      if (window.sessionStorage.getItem('form_uuid') === "{{last_form['form_uuid']}}") {
+        document.getElementById('CheckForm').setAttribute('style', 'background-color: #00a817;');
+        document.getElementById("check_true").disabled = false;
+      } else {
+        document.getElementById('CheckForm').setAttribute('style', 'background-color: #f42e0b;');
+        document.getElementById("check_false").disabled = false;
+      }
+    </script>
+  </body>

@@ -31,6 +31,14 @@
             <option value="Order" {% if val == "Order" %} selected {% endif %}>Order</option>
             <option value="Prepare" {% if val == "Prepare" %} selected {% endif %}>Prepare</option>
           </select>
+          <span class="grid-spacer"></span>
+        {% elif 'Language' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly> 
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="en" {% if val == "en" %} selected {% endif %}>English</option>
+            <option value="de" {% if val == "de" %} selected {% endif %}>German</option>
+          </select>
           <span class="grid-spacer"></span>          
         {% elif 'Output_Bon' in option or 'Issuer' in option or 'Order' in option %}
           <input id="{{ option }}_option" value="{{ option}}" readonly>

@@ -11,10 +11,10 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <div class="time-date-clock" id="clock"></div>
     <div style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%)">
-      <img src="/static/images/qrcode.png" style="width: 150px;" />
+      <img src="/static/images/qrcode.png" style="width: 120px;" />
     </div>
     <div class="icon-dark" onclick="setDMode()"><h1>Dark<h1></div>
-    <h1>Hello {{ user }}, your role is "{{ role }}"</h1>
+    <h1>Hello {{ user }} ({{ role }})</h1>
     <p>Following functions are available:</p>
     <form class="button-grid">
       {% if role == "master" %}
@@ -40,8 +40,12 @@
           <label for="category">{{ category }}</label>
           <input type="hidden" name="category" id="category" value="{{ category }}">
           {% if (role == "organizer") or role == "master" %}
-            <button type="submit" name="action" value="Output">Output</button>
-            <button type="submit" name="action" value="Return">Return</button>
+            <span class="grid-spacer"></span>
+            {% if category == "System" %}
+              <span class="grid-spacer"></span>
+            {% else %}
+              <button type="submit" name="action" value="Output">Output</button>
+            {% endif %}
             <button type="submit" name="action" value="Set_Price">Set Price</button>
           {% endif %}
         </form>

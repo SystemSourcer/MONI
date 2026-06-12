@@ -135,8 +135,8 @@ body.dark-mode th {
 }
 
 @media print {
-  tfoot {
-    display: table-footer-group;
+  tfoot{
+    display:table-row-group;
   }
   
   .icon-moni {

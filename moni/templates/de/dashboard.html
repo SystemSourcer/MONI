@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="refresh" content="60">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <div class="time-date-clock" id="clock"></div>
+    <div style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%)">
+      <img src="/static/images/qrcode.png" style="width: 120px;" />
+    </div>
+    <div class="icon-dark" onclick="setDMode()"><h1>Dark<h1></div>
+    <h1>Hallo {{ user }} ({{ role }})</h1>
+    <p>Folgende Funktionen stehen zur Verfügung:</p>
+    <form class="button-grid">
+      {% if role == "master" %}
+        <button type="button" onclick="window.location.href='/place_management'">Platz Verwaltung</button>
+        <button type="button" onclick="window.location.href='/balance_sheet'">Bilanzblatt</button>
+        <button type="button" onclick="window.location.href='/settings'">Einstellungen</button>
+        <button type="button" onclick="window.location.href='/test_print'">Drucker-Test</button>
+      {% endif %}
+      {% if (role == "organizer") or (role == "master") %}
+        <button type="button" onclick="window.location.href='/input'">Eingabe</button>
+      {% endif %}
+      {% if role == "negotiator" or role == "master" %}
+        <button type="button" onclick="window.location.href='/order_place'">Bestellung</button>
+      {% endif %}
+      {% if settings['Issuer'] == 'Yes' %}
+        <button type="button" onclick="window.location.href='/issue'">Austragen</button>
+      {% endif %}
+      <button type="button" onclick="window.location.href='/logout'">Abmelden</button>
+    </form>
+      <h2>Inventar / Lager:</h2>
+      {% for category, idl in inventory.items() %}
+        <form method="post" action="/dashboard">
+          <label for="category">{{ category }}</label>
+          <input type="hidden" name="category" id="category" value="{{ category }}">
+          {% if (role == "organizer") or role == "master" %}
+            <span class="grid-spacer"></span>
+            {% if category == "System" %}
+              <span class="grid-spacer"></span>
+            {% else %}
+              <button type="submit" name="action" value="Output">Ausgabe</button>
+            {% endif %}
+            <button type="submit" name="action" value="Set_Price">Preis setzen</button>
+          {% endif %}
+        </form>
+        <table>
+            <thead>
+                <tr>
+                {% for key in idl[0].keys() %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for id in idl %}
+                <tr>
+                {%for value in id.values()%}
+                  <td>
+                  {{value}}
+                  </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+      {% endfor %}
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+      function setDMode() {
+        if (window.sessionStorage.getItem('Mode') === 'dark') {
+          window.sessionStorage.setItem('Mode', 'white')
+        } else {
+          window.sessionStorage.setItem('Mode', 'dark')
+        }
+        element.classList.toggle("dark-mode")
+      }
+
+
+      function updateClock() {
+        document.getElementById("clock").innerHTML = new Date().toLocaleDateString('en-gb', {year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false})
+      }
+
+      setInterval(updateClock, 1000)
+
+    </script>
+  </body>
+</html>

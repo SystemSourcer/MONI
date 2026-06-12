@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestellung</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Bestellung für: {{place}}</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+      <form class="button-grid">
+      <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
+      {% for category in inventory %}
+        {% for item_dict in inventory[category] %}
+          {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
+            <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </form>
+    <form id="OrderForm" method="post" action="order_goods">
+      <input type="hidden" id="form_uuid" name="form_uuid" value="{{ form_uuid }}">
+      <input type="hidden" name="place" value="{{place}}">
+      <label>Artikel:</label>
+      <label>Menge:</label>
+      <label>Preis in €:</label>
+      <label>Zusatz:</label>
+      <hr id="hrForm">
+      <button type="submit" id="order">Bestellen</button>
+      <label>Gesamt in €:</label>
+      <input type="text" name="total" value="0" readonly>
+      <button type="button" id="paid" onclick="enableOrder()">Bezahlt</button>
+    </form>
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+      document.querySelector(`input[name="total"]`).value = "0"
+      document.getElementById("order").disabled = true;
+      document.getElementById("paid").disabled = true;
+
+      let free = false
+
+      window.sessionStorage.setItem('form_uuid', document.getElementById('form_uuid').value) 
+
+    function enableOrder(){
+      document.getElementById("order").disabled = false;
+    }
+
+    function toggleFree(){
+      free = !free 
+      if (free){
+        document.getElementById("togfree").style.background='#00a817';
+      } else {
+        document.getElementById("togfree").style.background='';
+      }
+    }
+
+    function addItem(cat, name, max_quantity, ordered, pricePerUnit) {
+      const form = document.getElementById('OrderForm');
+      let term = ''
+      if (free) {term = `${term}_free`}
+      let category = document.querySelector(`input[name="${name}_category${term}"]`);
+      let item = document.querySelector(`input[name="${name}_item${term}"]`);
+      let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
+      let price = document.querySelector(`input[name="${name}_price${term}"]`);
+      let custom = document.querySelector(`input[name="${name}_custom${term}"]`);
+      let total = document.querySelector(`input[name="total"]`);
+
+      // Falls es noch nicht existiert, anlegen
+      if (!item) {
+        category = document.createElement('input');
+        category.name = `${name}_category${term}`
+        category.value = cat;
+        category.type = 'hidden'
+        item = document.createElement('input');
+        item.name = `${name}_item${term}`
+        item.value = name;
+        item.readOnly = true;
+        quantity = document.createElement('input');
+        quantity.type = 'number';
+        quantity.name = `${name}_quantity${term}`;  
+        quantity.value = "0";
+        quantity.min = "1";
+        quantity.max = max_quantity - ordered;
+        quantity.step = "1";
+        price = document.createElement('input');
+        price.type = 'text';
+        price.name = `${name}_price${term}`;  
+        price.value = "0";
+        price.readOnly = true;
+        custom = document.createElement('input');
+        custom.name = `${name}_custom${term}`; 
+        form.insertBefore(category, hrForm)
+        form.insertBefore(item, hrForm)
+        form.insertBefore(quantity, hrForm)
+        form.insertBefore(price, hrForm)
+        form.insertBefore(custom, hrForm)
+        document.getElementById("paid").disabled = false;
+        // Kopplung nur einmal einrichten:
+        let isUpdating = false;
+
+        quantity.addEventListener('input', () => {
+          if (isUpdating) return;
+          isUpdating = true;
+          const q = parseFloat(quantity.value);
+          if (free) {
+            price.value = "0"
+          } else {
+            price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+          }
+          
+          let sum = 0;
+          const priceFields = document.querySelectorAll(('input[name*="price"]'));
+          priceFields.forEach(p => {
+            const v = Number(p.value);
+            if (!isNaN(v)) {
+              sum += v;
+            }
+          });
+          total.value = sum.toFixed(2)
+
+          isUpdating = false;
+        });
+      }
+      // Wert erhöhen
+      const current = parseInt(quantity.value || "0", 10);
+      quantity.value = Math.min(current + 1, parseInt(max_quantity) - parseInt(ordered));
+
+      const q = parseFloat(quantity.value);
+      if (free) {
+        price.value = "0"
+      } else {
+      price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+      }
+
+      let sum = 0;
+      const priceFields = document.querySelectorAll(('input[name*="price"]'));
+      priceFields.forEach(p => {
+        const v = Number(p.value);
+        if (!isNaN(v)) {
+          sum += v;
+        }
+      });
+      total.value = sum.toFixed(2)
+    }
+    </script>
+  </body>
+</html>

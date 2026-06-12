@@ -20,12 +20,14 @@
       <input type="datetime-local" name="start" id="start" required>
       <input type="datetime-local" name="end" id="end" required>
       <select id="type" name="type">
-        <option value="out_all">Output (all)</option>
-        <option value="order">Order</option>
-        <option value="output">Output (only)</option>
-        <option value="return">Return (only)</option>
-        <option value="input">Input</option>
-        <option value="all">All</option>
+        <option value="All">All</option>
+        <option value="Out_all">Output (all)</option>
+        <option value="Output">Output (only)</option>
+        <option value="Return">Return (only)</option>
+        <option value="Order">Order (only)</option>
+        <option value="_free">Free (only)</option>
+        <option value="Input">Input (only)</option>
+        
       </select>
       <select id="role" name="role">
         <option value="all">All</option>
@@ -102,10 +104,10 @@
       const end = document.getElementById('end').value;
       const type_string = document.getElementById('type').value;
       let type_array
-      if (type_string === 'out_all'){
-        type_array = ['order','output','return'];
-      } else if (type_string === 'all'){
-        type_array = ['order','output','return', 'input'];
+      if (type_string === 'Out_all'){
+        type_array = ['Order','Order','Output','Output','Return','Return'];
+      } else if (type_string === 'All'){
+        type_array = ['Order','Output','Return', 'Input'];
       } else {
         type_array = [type_string];
       }
@@ -132,7 +134,7 @@
         for (const col of columns){
           if (col === 'time' && start > eintrag[col]) { continue flowLogLoop }
           if (col === 'time' && end < eintrag[col]) { continue flowLogLoop }
-          if (col === 'type' && !type_array.includes(eintrag[col])){ continue flowLogLoop }
+          if (col === 'type' && !type_array.some(item => eintrag[col].includes(item))){ continue flowLogLoop }
           if (col === 'role' && !role_array.includes(eintrag[col])){ continue flowLogLoop }
           if (user !=='' && col === 'user' && eintrag[col] !== user){ continue flowLogLoop }
           if (cat !=='' && col === 'category' && eintrag[col] !== cat){ continue flowLogLoop }

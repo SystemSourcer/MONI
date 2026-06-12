@@ -10,12 +10,17 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Output: {{category}}</h1>
     <h2>Here you can sell or give out {{category}}</h2>
-    <p>Just touch or click the correstbonding buttons.</p>
+    <p>Just touch or click the corresbonding buttons.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form class="button-grid">
       <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
       <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togret" onclick="toggleRet()" >Return</button>
-      {% for item_dict in assortment %}
+      {% for item_dict in inventory['System'] %}
+        {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
+          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-System']}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+        {% endif %}
+      {% endfor %}
+      {% for item_dict in inventory[category] %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
           <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-'~category]}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
         {% endif %}
@@ -78,7 +83,7 @@
       let ret = false
 
       const auto_prep = "{{settings['Auto_Prepare-'~category]}}"
-      if ( auto_prep !== 'Off') {
+      if ( auto_prep !== '0') {
         var pbar = document.getElementById("timeProgress_0")
         var intervalId = setInterval(autoPrepare,100)
         var intervalRl = setInterval(() => { location.reload(); }, parseInt(auto_prep) * 1000 + 5000);

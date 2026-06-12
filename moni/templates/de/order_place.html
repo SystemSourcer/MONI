@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestellung</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Bestellung: Platz</h1>
+    <h2>Wählen Sie das Ziel der Bestellung aus, um fortzufahren.</h2>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form class="place-grid"  method="post" action="/order_place">
+      {% for place, value in place_dict.items() %}
+        {% if value %} 
+          <button style="background: #32df07; font-size : 2dvw; width: 8dvw; height: 6dvw;" type="submit" name="place", value="{{place}}">{{place}}</button>
+        {% else %}
+          <span class="grid-spacer"></span> 
+        {% endif %}
+      {% endfor %}
+    </form>
+  </body>
+  <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+  </script>
+</html>

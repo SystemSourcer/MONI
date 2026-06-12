@@ -11,7 +11,6 @@
     <h1>Order for: {{place}}</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
       <form class="button-grid">
-      <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" data-category="Order-Token" data-item="Token" data-quantity="100" data-ordered="0" data-price="-1" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">Token<br>-1€</button>
       <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
       {% for category in inventory %}
         {% for item_dict in inventory[category] %}
@@ -22,6 +21,7 @@
       {% endfor %}
     </form>
     <form id="OrderForm" method="post" action="order_goods">
+      <input type="hidden" id="form_uuid" name="form_uuid" value="{{ form_uuid }}">
       <input type="hidden" name="place" value="{{place}}">
       <label>Item:</label>
       <label>Quantity:</label>
@@ -44,6 +44,8 @@
 
       let free = false
 
+      window.sessionStorage.setItem('form_uuid', document.getElementById('form_uuid').value) 
+
     function enableOrder(){
       document.getElementById("order").disabled = false;
     }
@@ -59,37 +61,39 @@
 
     function addItem(cat, name, max_quantity, ordered, pricePerUnit) {
       const form = document.getElementById('OrderForm');
-      // Versuche, ein bestehendes hidden-Input mit diesem Namen zu finden
-      let category = document.querySelector(`input[name="${name}_category"]`);
-      let item = document.querySelector(`input[name="${name}_item"]`);
-      let quantity = document.querySelector(`input[name="${name}_quantity"]`);
-      let price = document.querySelector(`input[name="${name}_price"]`);
+      let term = ''
+      if (free) {term = `${term}_free`}
+      let category = document.querySelector(`input[name="${name}_category${term}"]`);
+      let item = document.querySelector(`input[name="${name}_item${term}"]`);
+      let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
+      let price = document.querySelector(`input[name="${name}_price${term}"]`);
+      let custom = document.querySelector(`input[name="${name}_custom${term}"]`);
       let total = document.querySelector(`input[name="total"]`);
 
       // Falls es noch nicht existiert, anlegen
       if (!item) {
         category = document.createElement('input');
-        category.name = `${name}_category`
+        category.name = `${name}_category${term}`
         category.value = cat;
         category.type = 'hidden'
         item = document.createElement('input');
-        item.name = `${name}_item`
+        item.name = `${name}_item${term}`
         item.value = name;
         item.readOnly = true;
         quantity = document.createElement('input');
         quantity.type = 'number';
-        quantity.name = `${name}_quantity`;  
+        quantity.name = `${name}_quantity${term}`;  
         quantity.value = "0";
         quantity.min = "1";
         quantity.max = max_quantity - ordered;
         quantity.step = "1";
         price = document.createElement('input');
         price.type = 'text';
-        price.name = `${name}_price`;  
+        price.name = `${name}_price${term}`;  
         price.value = "0";
         price.readOnly = true;
         custom = document.createElement('input');
-        custom.name = `${name}_custom`; 
+        custom.name = `${name}_custom${term}`; 
         form.insertBefore(category, hrForm)
         form.insertBefore(item, hrForm)
         form.insertBefore(quantity, hrForm)
