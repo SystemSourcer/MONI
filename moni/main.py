@@ -134,7 +134,7 @@ try:
 
 except:
     place_dict = {'To-Go':False, 'Take':False, 'cat_1':False, 'cat_2':False, 'cat_3':False, 'cat_4':False, 'cat_5':False, 'cat_6':False, 'cat_7':False, 'cat_8':False}
-    for letter in ['A','B','C','D','E','F','G','H']:
+    for letter in ['A','B','C','D','E','F','G','H','I','J','K']:
         for number in range(10):
             place_dict[letter+'-'+str(number)]=False
 
