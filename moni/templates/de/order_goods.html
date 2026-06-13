@@ -10,14 +10,16 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Bestellung für: {{place}}</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-      <form class="button-grid">
+    <form class="button-grid">
       <button style="font-size : 2dvw; width: 12dvw; height: 9dvw;" type="button" id="togfree" onclick="toggleFree()" >Free</button>
       {% for category in inventory %}
-        {% for item_dict in inventory[category] %}
-          {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-            <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
-          {% endif %}
-        {% endfor %}
+        {% if settings['Order-'~category] == 'On' %}
+          {% for item_dict in inventory[category] %}
+            {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
+              <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
       {% endfor %}
     </form>
     <form id="OrderForm" method="post" action="order_goods">
