@@ -28,12 +28,13 @@
     </form>
     <form id="OutputForm" method="post" action="/output">
       <input type="hidden" id="form_uuid" name="form_uuid" value="{{ form_uuid }}">
+      <input type="hidden" id="category" name="category" value="{{ category }}">
       <label>Item:</label>
       <label>Quantity:</label>
       <label>Price in €:</label>
       <span class="grid-spacer"></span> 
       <hr id="hrForm">
-      <button type="submit" id="giveOut" name="category" value={{category}}>Give Out</button>
+      <button type="submit" id="giveOut" >Give Out</button>
       <label>Total in €:</label>
       <input type="text" name="total" value="0" readonly>
       <button type="button" id="paid" onclick="enableOrder()" >Paid</button>
@@ -118,10 +119,13 @@
       if (pbar.value == 1200){document.getElementById("PrepareButton_0").click()}
     }
 
+    const form = document.getElementById('OutputForm');
+ 
+
     function addItem(name, max_quantity, ordered, pricePerUnit) {
       clearInterval(intervalId);
       clearInterval(intervalRl);
-      const form = document.getElementById('OutputForm');
+      
       let term = ''
       if (free) {term = `${term}_free`}
       if (ret) {term = `${term}_ret`}
@@ -129,8 +133,6 @@
       let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
       let price    = document.querySelector(`input[name="${name}_price${term}"]`);
       let total = document.querySelector(`input[name="total"]`);
-
-
 
       // Falls es noch nicht existiert, anlegen
       if (!item) {
@@ -164,7 +166,13 @@
           if (isUpdating) return;
           isUpdating = true;
           const q = parseFloat(quantity.value);
-          if (free) {
+
+          if (q === 0){
+            item.remove();
+            quantity.remove();
+            price.remove();
+            gridSpacer.remove()
+          } else if (free) {
             price.value = "0"
           } else {
             price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);

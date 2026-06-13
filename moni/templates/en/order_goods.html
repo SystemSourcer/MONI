@@ -60,9 +60,15 @@
         document.getElementById("togfree").style.background='';
       }
     }
+    const form = document.getElementById('OrderForm');
+    const subbut = document.getElementById('order');
 
+    form.addEventListener('submit', function () {
+      subbut.disabled = true;
+      subbut.textContent = 'sending...';
+    });
+    
     function addItem(cat, name, max_quantity, ordered, pricePerUnit) {
-      const form = document.getElementById('OrderForm');
       let term = ''
       if (free) {term = `${term}_free`}
       let category = document.querySelector(`input[name="${name}_category${term}"]`);
@@ -109,7 +115,12 @@
           if (isUpdating) return;
           isUpdating = true;
           const q = parseFloat(quantity.value);
-          if (free) {
+          if (q === 0){
+            item.remove();
+            quantity.remove();
+            price.remove();
+            custom.remove()
+          } else if (free) {
             price.value = "0"
           } else {
             price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
