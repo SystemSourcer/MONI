@@ -1,13 +1,15 @@
 
 # MONI 
-This is MONI, the Main Organsisational Networking Interface  
+This is MONI, the Main Organsisational Networking Interface.  
+It organizes an inventory and monitors the flow of goods.
 
 # Logo / Icon
 ![Icon](moni/static/images/favicon.ico)  
 
 ## Descibtion
 MONI originally came about from the idea of creating a sort of “[Kassenka](https://play.google.com/store/apps/details?id=com.ankele.kassenka&hl=de)” version for the computer.  
-However, even shortly after development began, the thinking went beyond this initial scope.  
+However, even shortly after development began, the thinking went beyond this initial scope.
+It moved from a point-of-sale system to a system for organizing and monitoring inventory and warehouse operations. 
 Instead of using [Tkinter](https://docs.python.org/fr/3/library/tkinter.html) to design a local GUI, the decision was made to to work with HTML.  
 This enabels a multi-user environment within a local network. 
 
@@ -15,11 +17,17 @@ This enabels a multi-user environment within a local network.
 
 - Complete digital System with four roles
 - Optional support for thermal printers via [python-escpos](https://github.com/python-escpos/python-escpos)
-- Logging all I/O actions and creation of a balance or overview
+- Logging all I/O actions of items and creation of a balance or overview
 - Ordersystem with palce / tabel management
-- More features are in developent
+- More features are in developent (message function)
 
-## Getting Started
+## What MONI does NOT do
+
+- Record payments
+- Calculate Tax
+- Keep track of the cash balance or close out the cash register
+
+## Getting started (with Docker)
 
 ### Build Docker image:
 Open a terminal in the cloned Git repo folder or cd in it.  
@@ -29,7 +37,7 @@ docker build -t moni ./
 ```
 
 ### Start the Docker container:
-On WIndows (only without printers and qrcode)
+On Windows (only without printers and qrcode)
 ```bash 
 docker run -it --rm -p 8000:8000 -e TZ=Continent/City -v C:\Path\to\GitHub\MONI:/workspace moni bash
 ```
@@ -52,6 +60,9 @@ Then replace the hashed string in the python file with it to update the password
 ```bash
 uvicorn moni.main:app --reload --host 0.0.0.0
 ```
+## Getting started (without  Docker)
+Open a terminal in the cloned Git repo folder or cd in it.
+... to be written ...
 
 ## Authors
 This project / repo was developed by SystemSourcer.

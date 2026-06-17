@@ -16,7 +16,7 @@
         {% if settings['Order-'~category] == 'On' %}
           {% for item_dict in inventory[category] %}
             {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-              <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+              <button style="font-size : 2dvw; width: 12dvw; height: 9dvw; background-color: {{settings['Color-'~category]}}" type="button" data-category="{{category}}" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-value="{{ item_dict['value'] }}" onclick="addItem(this.dataset.category, this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.value))">{{item_dict['item']}}<br>{{item_dict['value']}}€</button>
             {% endif %}
           {% endfor %}
         {% endif %}
@@ -27,13 +27,13 @@
       <input type="hidden" name="place" value="{{place}}">
       <label>Artikel:</label>
       <label>Menge:</label>
-      <label>Preis in €:</label>
+      <label>Wert in €:</label>
       <label>Zusatz:</label>
       <hr id="hrForm">
       <button type="submit" id="order">Bestellen</button>
-      <label>Gesamt in €:</label>
+      <label>Gesamtwert in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="button" id="paid" onclick="enableOrder()">Bezahlt</button>
+      <button type="button" id="paid" onclick="enableOrder()">Bestätigt</button>
     </form>
     <script>
       var element = document.body;
@@ -68,13 +68,13 @@
       subbut.textContent = 'Wird gesendet...';
     });
 
-    function addItem(cat, name, max_quantity, ordered, pricePerUnit) {
+    function addItem(cat, name, max_quantity, ordered, valuePerUnit) {
       let term = ''
       if (free) {term = `${term}_free`}
       let category = document.querySelector(`input[name="${name}_category${term}"]`);
       let item = document.querySelector(`input[name="${name}_item${term}"]`);
       let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
-      let price = document.querySelector(`input[name="${name}_price${term}"]`);
+      let value = document.querySelector(`input[name="${name}_value${term}"]`);
       let custom = document.querySelector(`input[name="${name}_custom${term}"]`);
       let total = document.querySelector(`input[name="total"]`);
 
@@ -95,17 +95,17 @@
         quantity.min = "1";
         quantity.max = max_quantity - ordered;
         quantity.step = "1";
-        price = document.createElement('input');
-        price.type = 'text';
-        price.name = `${name}_price${term}`;  
-        price.value = "0";
-        price.readOnly = true;
+        value = document.createElement('input');
+        value.type = 'text';
+        value.name = `${name}_value${term}`;  
+        value.value = "0";
+        value.readOnly = true;
         custom = document.createElement('input');
         custom.name = `${name}_custom${term}`; 
         form.insertBefore(category, hrForm)
         form.insertBefore(item, hrForm)
         form.insertBefore(quantity, hrForm)
-        form.insertBefore(price, hrForm)
+        form.insertBefore(value, hrForm)
         form.insertBefore(custom, hrForm)
         document.getElementById("paid").disabled = false;
         // Kopplung nur einmal einrichten:
@@ -118,17 +118,17 @@
           if (q === 0){
             item.remove();
             quantity.remove();
-            price.remove();
+            value.remove();
             custom.remove()
           } else if (free) {
-            price.value = "0"
+            value.value = "0"
           } else {
-            price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+            value.value = isNaN(q) ? '' : (q * valuePerUnit).toFixed(2);
           }
           
           let sum = 0;
-          const priceFields = document.querySelectorAll(('input[name*="price"]'));
-          priceFields.forEach(p => {
+          const valueFields = document.querySelectorAll(('input[name*="value"]'));
+          valueFields.forEach(p => {
             const v = Number(p.value);
             if (!isNaN(v)) {
               sum += v;
@@ -145,14 +145,14 @@
 
       const q = parseFloat(quantity.value);
       if (free) {
-        price.value = "0"
+        value.value = "0"
       } else {
-      price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+      value.value = isNaN(q) ? '' : (q * valuePerUnit).toFixed(2);
       }
 
       let sum = 0;
-      const priceFields = document.querySelectorAll(('input[name*="price"]'));
-      priceFields.forEach(p => {
+      const valueFields = document.querySelectorAll(('input[name*="value"]'));
+      valueFields.forEach(p => {
         const v = Number(p.value);
         if (!isNaN(v)) {
           sum += v;

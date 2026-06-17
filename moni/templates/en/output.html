@@ -17,12 +17,12 @@
       <button style="font-size : 2dvw; width: 12dvw; height: 7dvw;" type="button" id="togret" onclick="toggleRet()" >Return</button>
       {% for item_dict in inventory['System'] %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-System']}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-System']}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-value="{{ item_dict['value'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.value))">{{item_dict['item']}}<br>{{item_dict['value']}}€</button>
         {% endif %}
       {% endfor %}
       {% for item_dict in inventory[category] %}
         {% if item_dict['quantity'] - item_dict['ordered'] > 0 %}
-          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-'~category]}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-price="{{ item_dict['price'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.price))">{{item_dict['item']}}<br>{{item_dict['price']}}€</button>
+          <button style="font-size : 2dvw; width: 12dvw; height: 7dvw; background-color: {{settings['Color-'~category]}}" type="button" data-item="{{ item_dict['item'] }}" data-quantity="{{ item_dict['quantity'] }}" data-ordered="{{ item_dict['ordered'] }}" data-value="{{ item_dict['value'] }}" onclick="addItem(this.dataset.item, this.dataset.quantity, this.dataset.ordered, parseFloat(this.dataset.value))">{{item_dict['item']}}<br>{{item_dict['value']}}€</button>
         {% endif %}
       {% endfor %}
     </form>
@@ -31,13 +31,13 @@
       <input type="hidden" id="category" name="category" value="{{ category }}">
       <label>Item:</label>
       <label>Quantity:</label>
-      <label>Price in €:</label>
+      <label>Value in €:</label>
       <span class="grid-spacer"></span> 
       <hr id="hrForm">
       <button type="submit" id="giveOut" >Give Out</button>
-      <label>Total in €:</label>
+      <label>Total value in €:</label>
       <input type="text" name="total" value="0" readonly>
-      <button type="button" id="paid" onclick="enableOrder()" >Paid</button>
+      <button type="button" id="paid" onclick="enableOrder()" >Confirm</button>
     </form>
     {% for i in range(prepare_order_list|length) %}
       <h2>Order number {{ prepare_order_key_list[i] }} for place {{ prepare_order_list[i]['place'] }}:</h2>
@@ -122,7 +122,7 @@
     const form = document.getElementById('OutputForm');
  
 
-    function addItem(name, max_quantity, ordered, pricePerUnit) {
+    function addItem(name, max_quantity, ordered, valuePerUnit) {
       clearInterval(intervalId);
       clearInterval(intervalRl);
       
@@ -131,7 +131,7 @@
       if (ret) {term = `${term}_ret`}
       let item = document.querySelector(`input[name="${name}_item${term}"]`);
       let quantity = document.querySelector(`input[name="${name}_quantity${term}"]`);
-      let price    = document.querySelector(`input[name="${name}_price${term}"]`);
+      let value    = document.querySelector(`input[name="${name}_value${term}"]`);
       let total = document.querySelector(`input[name="total"]`);
 
       // Falls es noch nicht existiert, anlegen
@@ -147,16 +147,16 @@
         quantity.min = "-100";
         quantity.max = max_quantity - ordered;
         quantity.step = "1";
-        price = document.createElement('input');
-        price.type = 'text';
-        price.name = `${name}_price${term}`;  
-        price.value = "0";
-        price.readOnly = true;
+        value = document.createElement('input');
+        value.type = 'text';
+        value.name = `${name}_value${term}`;  
+        value.value = "0";
+        value.readOnly = true;
         const gridSpacer = document.createElement('span');
         gridSpacer.className = 'grid-spacer';
         form.insertBefore(item, hrForm)
         form.insertBefore(quantity, hrForm)
-        form.insertBefore(price, hrForm)
+        form.insertBefore(value, hrForm)
         form.insertBefore(gridSpacer, hrForm);
         document.getElementById("paid").disabled = false;
         // Kopplung nur einmal einrichten:
@@ -170,17 +170,17 @@
           if (q === 0){
             item.remove();
             quantity.remove();
-            price.remove();
+            value.remove();
             gridSpacer.remove()
           } else if (free) {
-            price.value = "0"
+            value.value = "0"
           } else {
-            price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+            value.value = isNaN(q) ? '' : (q * valuePerUnit).toFixed(2);
           }
           
           let sum = 0;
-          const priceFields = document.querySelectorAll(('input[name*="price"]'));
-          priceFields.forEach(p => {
+          const valueFields = document.querySelectorAll(('input[name*="value"]'));
+          valueFields.forEach(p => {
             const v = Number(p.value);
             if (!isNaN(v)) {
               sum += v;
@@ -201,14 +201,14 @@
 
       const q = parseFloat(quantity.value);
       if (free) {
-        price.value = "0"
+        value.value = "0"
       } else {
-      price.value = isNaN(q) ? '' : (q * pricePerUnit).toFixed(2);
+      value.value = isNaN(q) ? '' : (q * valuePerUnit).toFixed(2);
       }
 
       let sum = 0;
-      const priceFields = document.querySelectorAll(('input[name*="price"]'));
-      priceFields.forEach(p => {
+      const valueFields = document.querySelectorAll(('input[name*="value"]'));
+      valueFields.forEach(p => {
         const v = Number(p.value);
         if (!isNaN(v)) {
           sum += v;

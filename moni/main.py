@@ -150,7 +150,7 @@ try:
     
     flow_log = {int(k): v for k, v in flow_log.items()} # because key are streings after loding but int wen createt thru the system
 
-except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'price': '0'}} # need init entry becaus counts with last entry...
+except: flow_log = {0: {'time': datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type': 'init', 'role': 'System', 'user': 'System', 'category':'Init', 'item': 'Init', 'quantity': '0', 'value': '0'}} # need init entry becaus counts with last entry...
 
 try:
     with open("/workspace/data/order_history.json", "r", encoding="utf-8") as order_history_file:
@@ -215,8 +215,8 @@ def dashboard_post(request: Request, category: str = Form(...), action: str = Fo
     if action == "Return":
         response = RedirectResponse(url=f"/return?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
 
-    if action == "Set_Price":
-        response = RedirectResponse(url=f"/set_price?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
+    if action == "Set_Value":
+        response = RedirectResponse(url=f"/set_value?category={cat_param}", status_code=status.HTTP_303_SEE_OTHER)
 
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="password", value=password, httponly=True, samesite="lax")
@@ -249,6 +249,9 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     user = request.cookies.get("user")
     if not role or password != role_dict[role]["password"]: return RedirectResponse(url="/login") 
 
+    category = category.strip()
+    item = item.strip()
+
     if category not in inventory.keys(): 
         inventory[category] = list()
         place_added = False
@@ -260,7 +263,7 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
             else: place_dict[key] = place_dict.pop(key)
 
     if item not in [id['item'] for id in inventory[category]]:
-        inventory[category].append({'item':item,'quantity':0,'ordered':0,'price':0})
+        inventory[category].append({'item':item,'quantity':0,'ordered':0,'value':0})
 
     for id in inventory[category]:
         if id['item'] == item:
@@ -287,17 +290,17 @@ def input_post(request: Request, category: str = Form(...), item: str = Form(...
     return response
 
 
-@app.get("/set_price")
-def set_price(request: Request, category: str):
+@app.get("/set_value")
+def set_value(request: Request, category: str):
     role = request.cookies.get("role")
     password = request.cookies.get("password")
     user = request.cookies.get("user")
     if not role or password != role_dict[role]["password"]: return RedirectResponse(url="/login") 
-    return templates.TemplateResponse(request, f"{settings_dict['Language']}/set_price.html", {"assortment": inventory[category]})
+    return templates.TemplateResponse(request, f"{settings_dict['Language']}/set_value.html", {"assortment": inventory[category]})
 
 
-@app.post("/set_price") 
-async def set_price_post(request: Request):
+@app.post("/set_value") 
+async def set_value_post(request: Request):
     role = request.cookies.get("role")
     password = request.cookies.get("password")
     user = request.cookies.get("user")
@@ -305,11 +308,11 @@ async def set_price_post(request: Request):
 
     form = await request.form()
 
-    for field_name, value in form.items():
-        print(f"New price for {field_name}: {value}")
+    for field_name, field_content in form.items():
+        print(f"New value for {field_name}: {field_content}")
         for idl in inventory.values():
             for id in idl:
-                if id['item'] == field_name: id['price'] = value
+                if id['item'] == field_name: id['value'] = field_content
                    
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
         json.dump(inventory, inventory_file, ensure_ascii=False, indent=2)
@@ -361,10 +364,10 @@ async def settings_post(request: Request):
 
     form = await request.form()
 
-    for field_name, value in form.items():
-        if value == "#000000": value = '' # if no value choosen, then empy sring... this wil lead to deafult in java scipt
-        print(f"New setting for {field_name}: {value}")
-        settings_dict[field_name] = value
+    for field_name, field_content in form.items():
+        if field_content == "#000000": field_content = '' # if no value choosen, then empy sring... this wil lead to deafult in java scipt
+        print(f"New setting for {field_name}: {field_content}")
+        settings_dict[field_name] = field_content
 
     if settings_dict['Language'] == 'de': locale.setlocale(locale.LC_TIME, "de_DE.UTF-8") # for german month names
 
@@ -450,24 +453,24 @@ async def output_post(request: Request):
 
     output_item_list = list()
 
-    for field_name, value in form.items():
+    for field_name, field_content in form.items():
         if 'item' in field_name:
             if 'ret' in field_name: out_type = 'Return'
             else: out_type = 'Output'
             if 'free' in field_name: out_type = out_type + '_free'
 
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':out_type, 'role':role, 'user': user, 'category':category, 'item':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':out_type, 'role':role, 'user': user, 'category':category, 'item':field_content}
 
         elif 'quantity' in field_name: 
-            flow_log[n+1]['quantity'] = value
+            flow_log[n+1]['quantity'] = field_content
             output_item_list.append({'item':flow_log[n+1]['item'], 'quantity':flow_log[n+1]['quantity']})
             for idl in inventory.values():
                 for id in idl:
-                    if id['item'] in field_name: id['quantity'] -= int(value)
+                    if id['item'] in field_name: id['quantity'] -= int(field_content)
 
-        elif 'price' in field_name:
-            flow_log[n+1]['price'] = value 
+        elif 'value' in field_name:
+            flow_log[n+1]['value'] = field_content 
 
 
     with open("/workspace/data/inventory.json", "w", encoding="utf-8") as inventory_file:
@@ -563,32 +566,32 @@ async def order_goods_post(request: Request):
     print(form)
 
     itemwise_order_list = []
-    for field_name, value in form.items():
+    for field_name, field_content in form.items():
         
         if 'category' in field_name:
             n = int(next(reversed(flow_log)))
-            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'Order', 'role':role, 'user': user, 'category':value}
+            flow_log[n+1] = {'time':datetime.now().strftime("%Y-%m-%dT%H:%M"), 'type':'Order', 'role':role, 'user': user, 'category':field_content}
             itemwise_order = dict()
-            itemwise_order['category'] = value
+            itemwise_order['category'] = field_content
 
         elif 'item' in field_name:
-            flow_log[n+1]['item'] = value
-            itemwise_order['item'] = value
+            flow_log[n+1]['item'] = field_content
+            itemwise_order['item'] = field_content
 
         elif 'quantity' in field_name: 
-            flow_log[n+1]['quantity'] = value
-            itemwise_order['quantity'] = value
+            flow_log[n+1]['quantity'] = field_content
+            itemwise_order['quantity'] = field_content
             for idl in inventory.values():
                 for id in idl:
                     if id['item'] in field_name:
-                        if settings_dict[f'Order_Bon-{flow_log[n+1]['category']}'] == 'Order': id['quantity'] -= int(value)
-                        else: id['ordered'] += int(value)
+                        if settings_dict[f'Order_Bon-{flow_log[n+1]['category']}'] == 'Order': id['quantity'] -= int(field_content)
+                        else: id['ordered'] += int(field_content)
             
-        elif 'price' in field_name:
-            flow_log[n+1]['price'] = value 
+        elif 'value' in field_name:
+            flow_log[n+1]['value'] = field_content 
 
         elif 'custom' in field_name:
-            itemwise_order['custom'] = value
+            itemwise_order['custom'] = field_content
             itemwise_order_list.append(itemwise_order)
 
     for key in inventory.keys():

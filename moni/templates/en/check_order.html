@@ -14,7 +14,7 @@
       <input type="hidden" name="place" value="{{place}}">
       <label>Item:</label>
       <label>Quantity:</label>
-      <label>Price in €:</label>
+      <label>Value in €:</label>
       <label>Custom:</label>
       {% for field_name, field_value in last_form.items() %}
         {% if 'place' in field_name or 'category' in field_name or 'total' in field_name or 'uuid' in field_name %}
@@ -26,7 +26,7 @@
       <hr id="hrForm">
       <button type="submit" formaction="/order_goods" name="check" id="check_false" value="resubmit" >Resubmit</button>
       <button type="submit" formaction="/check_order" name="check" id="check_true" value="next" >Next</button>
-      <label>Total in €:</label>
+      <label>Total value in €:</label>
       <input type="text" name="total" value="{{last_form['total']}}" readonly>
     </form>
     <script>

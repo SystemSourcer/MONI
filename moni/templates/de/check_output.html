@@ -14,20 +14,20 @@
       <input type="hidden" name="place" value="{{place}}">
       <label>Artikel:</label>
       <label>Menge:</label>
-      <label>Preis in €:</label>
+      <label>Wert in €:</label>
       <span class="grid-spacer"></span> 
       {% for field_name, field_value in last_form.items() %}
         {% if 'category' in field_name or 'total' in field_name or 'uuid' in field_name %}
           <input type="hidden", name="{{field_name}}" value="{{field_value}}" >
         {% else%}
           <input type="text", name="{{field_name}}" value="{{field_value}}" readonly>
-          {% if 'price' in field_name %} <span class="grid-spacer"></span> {% endif %}
+          {% if 'value' in field_name %} <span class="grid-spacer"></span> {% endif %}
         {% endif %}
       {% endfor %}
       <hr id="hrForm">
       <button type="submit" formaction="/output" name="check" id="check_false" value="resubmit" >Erneut Abschicken</button>
       <button type="submit" formaction="/check_output" name="check" id="check_true" value="next" >Weiter</button>
-      <label>Gesamt in €:</label>
+      <label>Gesamtwert in €:</label>
       <input type="text" name="total" value="{{last_form['total']}}" readonly>
     </form>
     <script>
