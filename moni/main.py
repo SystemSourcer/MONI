@@ -736,7 +736,7 @@ async def post_printer(request: Request):
         print_order(0,address) # 0 is the init system order
 
     if use_case == 'place':
-        for key,value in place_dict:
+        for key,value in place_dict.items():
             if value: print_palce(key,address)
 
     response = RedirectResponse(url=f"/printer", status_code=status.HTTP_303_SEE_OTHER)
