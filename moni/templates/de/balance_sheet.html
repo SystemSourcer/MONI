@@ -141,7 +141,7 @@
         for (const col of columns){
           if (col === 'time' && start > eintrag[col]) { continue flowLogLoop }
           if (col === 'time' && end < eintrag[col]) { continue flowLogLoop }
-          if (col === 'type' && !type_array.some(item => eintrag[col].includes(item)) && not_type_array.some(item => eintrag[col].includes(item))){ continue flowLogLoop }
+          if (col === 'type' && !type_array.some(item => eintrag[col].includes(item)) && not_type_array.every(item => eintrag[col].includes(item))){ continue flowLogLoop }
           if (col === 'role' && !role_array.includes(eintrag[col])){ continue flowLogLoop }
           if (user !=='' && col === 'user' && eintrag[col] !== user){ continue flowLogLoop }
           if (cat !=='' && col === 'category' && eintrag[col] !== cat){ continue flowLogLoop }
