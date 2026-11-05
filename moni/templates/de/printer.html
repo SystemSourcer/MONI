@@ -22,7 +22,7 @@
     <h3>Tischnummern Drucken</h3>
     <p>Tippen oder klicken Sie einfach auf die entsprechende Schaltfläche, um an dem entsprechenden Drucker die derzeit aktivierten Tsiche zu drucken.</p>
     <form id="PrintPlaceForm" method="post" action="/printer">
-      <input type="hidden" name="use_case" value="palce">
+      <input type="hidden" name="use_case" value="place">
       {% for printer in printers %}
           <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
       {% endfor %}
