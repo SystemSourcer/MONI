@@ -87,7 +87,7 @@ def print_palce(place, address):
     printer.set(bold = True, custom_size=True, width=8, height=8)
     printer.textln(place)
     printer.set(bold=False, custom_size=True, width=1, height=1)
-    printer.ln(1)
+    printer.ln(2)
     printer.cut(mode='PART', feed=False)
     printer.close()
 
