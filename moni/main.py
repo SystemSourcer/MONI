@@ -75,6 +75,20 @@ def print_output(output, address): #https://python-escpos.readthedocs.io/en/late
     printer.cut(mode='PART', feed=False)
     printer.close()
 
+def print_palce(place, address):
+    """Prints the numbers of the activated places"""
+    printer = Network(address)
+    printer.profile.media['width']['pixels'] = 567 # or 384, depending to the printer
+    printer.set(align='center', bold = True, custom_size=True, width=2, height=2)
+    printer.textln(settings_dict['Event'])
+    printer.set(bold=False, custom_size=True, width=1, height=1)
+    printer.textln(settings_dict['Host'])
+    printer.set(bold = True, custom_size=True, width=2, height=2)
+    printer.textln(place)
+    printer.cut(mode='PART', feed=False)
+    printer.close()
+
+
 def print_message(message, address): #https://python-escpos.readthedocs.io/en/latest/api/escpos.html#escpos.escpos.Escpos.image
     """ 
     Prits a message on the corresponding printer (via category or addres if given)
@@ -691,8 +705,8 @@ async def issue_post(request: Request):
     return response
 
 
-@app.get("/test_print")
-def test_print(request: Request):
+@app.get("/printer")
+def printer(request: Request):
     role = request.cookies.get("role")
     password = request.cookies.get("password")
     user = request.cookies.get("user")
@@ -703,24 +717,29 @@ def test_print(request: Request):
         if 'Printer-' in key and val != '': printer_list.append({'printer':key, 'address':val}) 
 
     if printer_list:
-        return templates.TemplateResponse(request,f"{settings_dict['Language']}/test_print.html", {"printers": printer_list})
+        return templates.TemplateResponse(request,f"{settings_dict['Language']}/printer.html", {"printers": printer_list})
     else:
-        return templates.TemplateResponse(request, f"{settings_dict['Language']}/test_print.html", {"error": "Bon printing is not activated..."})
+        return templates.TemplateResponse(request, f"{settings_dict['Language']}/printer.html", {"error": "Bon printing is not activated..."})
 
 
-@app.post("/test_print")
-async def post_test_print(request: Request):
+@app.post("/printer")
+async def post_printer(request: Request):
     role = request.cookies.get("role")
     password = request.cookies.get("password")
     user = request.cookies.get("user")
     if not role or password != role_dict[role]["password"]: return RedirectResponse(url="/login") 
 
     form = await request.form()
+    use_case = form.get("use_case")
+    if use_case == 'test':
+        address = form.get("address")
+        print_order(0,address) # 0 is the init system order
 
-    address = form.get("address")
-    print_order(0,address) # 0 is the init system order
+    if use_case == 'place':
+        for key,value in place_dict:
+            if value: print_palce(key,address)
 
-    response = RedirectResponse(url=f"/test_print", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url=f"/printer", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="role", value=role, httponly=True, samesite="lax")
     response.set_cookie(key="password", value=password, httponly=True, samesite="lax")
     response.set_cookie(key="user", value=user, httponly=True, samesite="lax")

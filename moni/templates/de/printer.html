@@ -10,9 +10,19 @@
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
     <h1>Drucker-Test</h1>
     <h2>Hier sehen Sie die konfigurierten Drucker. Die Konfiguration kann in den Einstellungen geändert werden.</h2>
+    <h3>Drucker Testen</h3>
     <p>Tippen oder klicken Sie einfach auf die entsprechende Schaltfläche, um den Drucker zu testen.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form id="PrinterForm" method="post" action="/test_print">
+    <form id="TestPrinterForm" method="post" action="/printer">
+      <input type="hidden" name="use_case" value="test">
+      {% for printer in printers %}
+          <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
+      {% endfor %}
+    </form>
+    <h3>Tischnummern Drucken</h3>
+    <p>Tippen oder klicken Sie einfach auf die entsprechende Schaltfläche, um an dem entsprechenden Drucker die derzeit aktivierten Tsiche zu drucken.</p>
+    <form id="PrintPlaceForm" method="post" action="/printer">
+      <input type="hidden" name="use_case" value="palce">
       {% for printer in printers %}
           <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
       {% endfor %}
