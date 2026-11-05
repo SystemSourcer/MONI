@@ -21,13 +21,17 @@
       <input type="datetime-local" name="end" id="end" required>
       <select id="type" name="type">
         <option value="All">All</option>
-        <option value="Out_all">Output (all)</option>
+        <option value="All_not_free">All (not free)</option>
+        <option value="Out_all">Out (all)</option>
+        <option value="Out_not_free">Out (not free)</option>
         <option value="Output">Output (only)</option>
+        <option value="Output_not_free">Output (not free)</option>
         <option value="Return">Return (only)</option>
+        <option value="Return_not_free">Return (not free)</option>
         <option value="Order">Order (only)</option>
+        <option value="Order_not_free">Order (not free)</option>
         <option value="_free">Free (only)</option>
         <option value="Input">Input (only)</option>
-        
       </select>
       <select id="role" name="role">
         <option value="all">All</option>
@@ -104,12 +108,31 @@
       const end = document.getElementById('end').value;
       const type_string = document.getElementById('type').value;
       let type_array
-      if (type_string === 'Out_all'){
-        type_array = ['Order','Order','Output','Output','Return','Return'];
-      } else if (type_string === 'All'){
+            let not_type_array
+      if (type_string === 'All'){
         type_array = ['Order','Output','Return', 'Input'];
+        not_type_array = [];
+      } else if (type_string === 'All_not_free'){
+        type_array = ['Order','Output','Return', 'Input'];
+        not_type_array = [_free];
+      } else if (type_string === 'Out_all'){
+        type_array = ['Order','Output','Return'];
+        not_type_array = [];
+      } else if (type_string === 'Out_not_free'){
+        type_array = ['Order','Output','Return'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Output_not_free'){
+        type_array = ['Output'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Return_not_free'){
+        type_array = ['Return'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Order_not_free'){
+        type_array = ['Order'];
+        not_type_array = ['_free'];
       } else {
         type_array = [type_string];
+        not_type_array = [];
       }
       const role_string = document.getElementById('role').value;
       let role_array
