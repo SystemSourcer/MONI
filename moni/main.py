@@ -731,8 +731,8 @@ async def post_printer(request: Request):
 
     form = await request.form()
     use_case = form.get("use_case")
+    address = form.get("address")
     if use_case == 'test':
-        address = form.get("address")
         print_order(0,address) # 0 is the init system order
 
     if use_case == 'place':
