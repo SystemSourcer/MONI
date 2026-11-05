@@ -3,16 +3,26 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Printer</title>
+    <title>Drucker-Test</title>
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Test Printer</h1>
-    <h2>Here you can see the configured printers, configuration can be changed in settings.</h2>
-    <p>Just touch or click the corresbonding button to test the printer.</p>
+    <h1>Printer</h1>
+    <h2>Here you can see the configured printers. The configuration can be changed in the settings</h2>
+    <h3>Test printer</h3>
+    <p>Touch or click on the corresponding button to test the printer.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form id="PrinterForm" method="post" action="/test_print">
+    <form id="TestPrinterForm" method="post" action="/printer">
+      <input type="hidden" name="use_case" value="test">
+      {% for printer in printers %}
+          <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
+      {% endfor %}
+    </form>
+    <h3>Print place numbers</h3>
+    <p>Touch or click on the corresponding button to print on the activated places on corresponding printer.</p>
+    <form id="PrintPlaceForm" method="post" action="/printer">
+      <input type="hidden" name="use_case" value="place">
       {% for printer in printers %}
           <button  style="font-size : 2dvw; width: 20dvw; height: 15dvh;" type="submit" name="address" value="{{printer['address']}}">{{printer['printer']}}<br>{{printer['address']}}</button>
       {% endfor %}
