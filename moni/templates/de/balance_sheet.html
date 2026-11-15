@@ -64,7 +64,18 @@
     <div id="flow-log-data"
      data-flow-log='{{ flow_log | tojson | safe }}'>
     </div>
-    <h2>Balance:</h2>
+    <h2>Nilanz Übersicht:</h2>
+    <table id="overview-table">
+      <thead>
+          <tr>
+              <th style="text-align: center;">Item</th> 
+              <th style="text-align: center;">Quantity Sum</th> 
+              <th style="text-align: center;">Value Sum</th> 
+          </tr>
+      </thead>
+      <tbody id="overview-body"></tbody>
+    </table>
+    <h2>Bilanz Log:</h2>
     <table id="balance-table">
       <thead>
           <tr>
@@ -73,8 +84,7 @@
             {% endfor %}
           </tr>
       </thead>
-      <tbody id="balance-body">
-      </tbody>
+      <tbody id="balance-body"></tbody>
       <tfoot id="balance-foot">
         <tr id="sumrow">
           {% for key in flow_log[0].keys() %}
@@ -146,11 +156,11 @@
       const item = document.getElementById('item').value;
       const elem = document.getElementById("flow-log-data");
       const flow_log = JSON.parse(elem.dataset.flowLog); // here correct because from html to js data-flow-log turns to elem.dataset.flowLog
-      const theadThs = document.querySelectorAll('#balance-table thead th');
-      const columns = Array.from(theadThs).map(th => th.textContent.trim());
-      const tbody = document.getElementById('balance-body');
-      const tfoot = document.getElementById('balance-foot');
-      tbody.innerHTML = "";  // alten Inhalt löschen
+      const theadThs = document.querySelectorAll('#balance-table thead th'); // these are the tabel cells with paramters
+      const columns = Array.from(theadThs).map(th => th.textContent.trim()); // these are only the content not the tabel cells with paramters
+      const tbalancebody = document.getElementById('balance-body');
+      const tbalancefoot = document.getElementById('balance-foot');
+      tbalancebody.replaceChildren();  // delete old content
       flowLogLoop:
       for (const [id, eintrag] of Object.entries(flow_log)){
         const tr = document.createElement('tr');
@@ -159,21 +169,21 @@
           if (col === 'time' && end < eintrag[col]) { continue flowLogLoop }
           if (col === 'type' && !type_array.some(item => eintrag[col].includes(item)) || not_type_array.some(item => eintrag[col].includes(item))){ continue flowLogLoop }
           if (col === 'role' && !role_array.includes(eintrag[col])){ continue flowLogLoop }
-          if (user !=='' && col === 'user' && eintrag[col] !== user){ continue flowLogLoop }
-          if (cat !=='' && col === 'category' && eintrag[col] !== cat){ continue flowLogLoop }
-          if (item !=='' && col === 'item' && eintrag[col] !== item){ continue flowLogLoop }
+          if (col === 'user' && user !=='' && eintrag[col] !== user){ continue flowLogLoop }
+          if (col === 'category' && cat !=='' && eintrag[col] !== cat){ continue flowLogLoop }
+          if (col === 'item' && item !=='' && eintrag[col] !== item){ continue flowLogLoop }
           const td = document.createElement('td');
           td.style.textAlign = 'center'
           td.textContent = eintrag[col] ?? "";  // falls ein Feld mal fehlt
           tr.appendChild(td);
         }
-        tbody.appendChild(tr);
+        tbalancebody.appendChild(tr);
       }
       for (let col = 0; col < columns.length; col++){
         let sum = 0;
         let onlynum = true;
-        for (let row = 0; row < tbody.rows.length; row++){
-          const zelle = tbody.rows[row].cells[col];
+        for (let row = 0; row < tbalancebody.rows.length; row++){
+          const zelle = tbalancebody.rows[row].cells[col];
           if (!zelle) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
           const text = zelle.textContent.trim();
           if (text === '') continue; // ignore empy cells
@@ -183,13 +193,48 @@
           }
           sum += parsenum(text);
         }
-        const targetcell =  tfoot.rows[0].cells[col];
+        const targetcell =  tbalancefoot.rows[0].cells[col];
         if (!targetcell) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
         if (onlynum){
           targetcell.textContent = sum.toFixed(2);
         } else {
           targetcell.textContent = "---" ;// --- sring in not only number cols
         }
+      }
+      const toverviewbody = document.getElementById('overview-body');
+      const overview = new Map();
+      const itemIndex = columns.indexOf("item"); // colums defined at the top in creation of tbody of full log table
+      const valueIndex = columns.indexOf("value"); // colums defined at the top in creation of tbody of full log table
+      const quantityIndex = columns.indexOf("quantity"); // colums defined at the top in creation of tbody of full log table
+
+      for (const row of tbalancebody.rows){
+        const cells = row.cells;
+        const itemcelltxt = cells[itemIndex].textContent.trim();
+        const quantitycellnum = parsenum(cells[quantityIndex].textContent.trim());
+        const valuecellnum = parsenum(cells[valueIndex].textContent.trim());
+        
+        // Skip empty or not valid value (aka inputs) 0 is only when parsum finds no number so in case of empty or not valid value
+        if (valuecellnum === 0 ){continue}
+
+        if (!overview.has(itemcelltxt)) {
+          overview.set(itemcelltxt, {
+            count: 0,
+            value: 0
+          });
+        }
+
+        const summary = overview.get(itemcelltxt);
+        summary.count += quantitycellnum;
+        summary.value += valuecellnum;
+      }
+      toverviewbody.replaceChildren();  // delete old content
+
+      for (const [itemcelltxt, summary] of overview) {
+        const row = toverviewbody.insertRow();
+
+        row.insertCell().textContent = itemcelltxt;
+        row.insertCell().textContent = summary.count;
+        row.insertCell().textContent = summary.value;
       }
     });
     </script>
