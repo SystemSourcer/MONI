@@ -75,7 +75,7 @@
       </thead>
       <tbody id="overview-body"></tbody>
     </table>
-    <h2>Balance Log:</h2>
+    <h2>Balance log:</h2>
     <table id="balance-table">
       <thead>
           <tr>
@@ -235,7 +235,7 @@
 
         row.insertCell().textContent = itemcelltxt;
         row.insertCell().textContent = summary.count;
-        row.insertCell().textContent = summary.value;
+        row.insertCell().textContent = summary.value.toFixed(2);
       }
     });
     </script>

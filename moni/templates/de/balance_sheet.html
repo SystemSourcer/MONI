@@ -8,9 +8,9 @@
   </head>
   <body>
     <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
-    <h1>Balance Sheet</h1>
-    <h2>Here you can make your balance.</h2>
-    <p>Set the Filter options for the balance.</p>
+    <h1>Bilanzblatt</h1>
+    <h2>Hier können sie ihre Bilanz erstellen.</h2>
+    <p>Setzen die die Filter für die Bilanz.</p>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form id="balanceFilter">
       <label>From:</label>
@@ -64,7 +64,7 @@
     <div id="flow-log-data"
      data-flow-log='{{ flow_log | tojson | safe }}'>
     </div>
-    <h2>Nilanz Übersicht:</h2>
+    <h2>Bilanz Übersicht:</h2>
     <table id="overview-table">
       <thead>
           <tr>
@@ -234,7 +234,7 @@
 
         row.insertCell().textContent = itemcelltxt;
         row.insertCell().textContent = summary.count;
-        row.insertCell().textContent = summary.value;
+        row.insertCell().textContent = summary.value.toFixed(2);
       }
     });
     </script>
