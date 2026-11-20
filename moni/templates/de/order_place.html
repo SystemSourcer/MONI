@@ -11,7 +11,7 @@
     <h1>Bestellung: Platz</h1>
     <h2>Wählen Sie das Ziel der Bestellung aus, um fortzufahren.</h2>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form class="place-grid"  method="post" action="/order_place">
+    <form class="place-grid" id="order_place-form" method="post" action="/order_place">
       {% for place, value in place_dict.items() %}
         {% if value %} 
           <button style="background: #32df07; font-size : 2dvw; width: 8dvw; height: 6dvw;" type="submit" name="place", value="{{place}}">{{place}}</button>
@@ -22,9 +22,23 @@
     </form>
   </body>
   <script>
-      var element = document.body;
-      if (window.sessionStorage.getItem('Mode') === 'dark') {
-        element.classList.toggle("dark-mode");
-      }
+    var element = document.body;
+    if (window.sessionStorage.getItem('Mode') === 'dark') {
+      element.classList.toggle("dark-mode");
+    }
+
+    const scrollKey = "scrollPosition:" + window.location.pathname; // window.location.pathname for side spesific scroll position
+    document.getElementById("order_place-form").addEventListener("submit", () => {
+      window.sessionStorage.setItem(scrollKey, window.scrollY);
+    });
+
+    const savedPosition = sessionStorage.getItem(scrollKey);
+    if (savedPosition !== null){
+      history.scrollRestoration = "manual"; // there is maunal and auto sdo manaul means the script does it or not but not the browaser itself :)
+      window.addEventListener("load", () => { // wait with sroll until side is loaded completle
+        window.scrollTo(0, Number(savedPosition));
+        sessionStorage.removeItem(scrollKey);
+      });
+    };
   </script>
 </html>
