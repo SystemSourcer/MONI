@@ -1,16 +1,17 @@
 # LRU - License (limited right of use)
 Copyright (c) 2026 SystemSourcer  
+
 ## License Grant:  
 All rights reserved, with the following exceptions:  
 End users are granted a simple, revocable,
 non-transferable license to use this software
-exclusively for private, non-commercial purposes.
+exclusively for non-commercial private purposes.
 
 In particular, it is NOT permitted to:
 - use the software in whole or in part for commercial purposes,
 - sell, rent, or make the software available for a fee,
 - integrate the software into products or services that are exploited commercially in whole or in part,
-- use or distribute derivative works of the software commercially.
+- use or distribute derivative works of the software commercially or woth righs for commercial usage.
 
 The publication of the source code does NOT constitute consent to any use beyond the purposes expressly permitted herein.
 

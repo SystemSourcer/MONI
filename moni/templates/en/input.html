@@ -2,8 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
   </head>
   <body>
@@ -17,9 +17,21 @@
       <label for="item">Item:</label>
       <label for="quantity">Quantity:</label>
       <span class="grid-spacer"></span> 
-      <input id="category" name="category" required>
-      <input id="item" name="item" required>
-      <input id="quantity" name="quantity" type="number" min="-1024" max="1024" step="1" required>
+      <input id="category" name="category" list="cat_opions" required>
+      <datalist id="cat_opions">
+        {% for category in inventory.keys() %}
+          <option value="{{ category }}"></option>
+        {% endfor %}
+      </datalist>
+      <input id="item" name="item" list="item_options" required>
+      <datalist id="item_options">
+        {% for category in inventory.values() %}
+          {% for item in category %}
+            <option value="{{ item['item'] }}"></option>
+          {% endfor %}
+        {% endfor %}
+      </datalist>
+      <input id="quantity" name="quantity" type="number" min="-4096" max="4096" step="1" value="0" required>
       <button type="submit">Add</button>
     </form>
   </body>

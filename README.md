@@ -1,17 +1,33 @@
 
 # MONI 
-This is MONI, the Main Organsisational Networking Interface  
+This is MONI, the Main Organsisational Networking Interface.  
+It organizes an inventory and monitors the flow of goods.
 
 # Logo / Icon
-![Icon](moni/static/favicon.ico)  
+![Icon](moni/static/images/favicon.ico)  
 
 ## Descibtion
 MONI originally came about from the idea of creating a sort of “[Kassenka](https://play.google.com/store/apps/details?id=com.ankele.kassenka&hl=de)” version for the computer.  
-However, even shortly after development began, the thinking went beyond this initial scope.  
+However, even shortly after development began, the thinking went beyond this initial scope.
+It moved from a point-of-sale system to a system for organizing and monitoring inventory and warehouse operations. 
 Instead of using [Tkinter](https://docs.python.org/fr/3/library/tkinter.html) to design a local GUI, the decision was made to to work with HTML.  
 This enabels a multi-user environment within a local network. 
 
-## Getting Started
+## Supported Features
+
+- Complete digital System with four roles
+- Optional support for thermal printers via [python-escpos](https://github.com/python-escpos/python-escpos)
+- Logging all I/O actions of items and creation of a balance or overview
+- Ordersystem with palce / tabel management
+- More features are in developent (message function)
+
+## What MONI does NOT do
+
+- Record payments
+- Calculate Tax
+- Keep track of the cash balance or close out the cash register
+
+## Getting started (with Docker)
 
 ### Build Docker image:
 Open a terminal in the cloned Git repo folder or cd in it.  
@@ -21,8 +37,13 @@ docker build -t moni ./
 ```
 
 ### Start the Docker container:
+On Windows (only without printers and qrcode)
 ```bash 
-docker run -it --rm -p 8000:8000 C:\Path\to\GitHub\MONI:/workspace moni bash
+docker run -it --rm -p 8000:8000 -e TZ=Continent/City -v C:\Path\to\GitHub\MONI:/workspace moni bash
+```
+On Linux (with all functions)
+```bash 
+docker run -it --rm --net=host  -e TZ=Continent/City -v /Path/to/GitHub/MONI:/workspace moni bash
 ```
 
 ### Creat password hashs
@@ -39,6 +60,9 @@ Then replace the hashed string in the python file with it to update the password
 ```bash
 uvicorn moni.main:app --reload --host 0.0.0.0
 ```
+## Getting started (without  Docker)
+Open a terminal in the cloned Git repo folder or cd in it.
+... to be written ...
 
 ## Authors
 This project / repo was developed by SystemSourcer.
@@ -46,6 +70,7 @@ This project / repo was developed by SystemSourcer.
 ## License (LRU)
 The entire project is under a LRU  (limited right of use) License. 
 More information in the [License file](LICENSE.md)...
+A license for commercial use can be obtained by contacting the developer. The costs will be one-tenth of one percent of the revenue recorded during use.
 
 ## Acknowledgments
 This project would not have been possible without the support of the [Musikverein Scharenstetten e.V. 1925](https://mv-scharenstetten.de/). I am deeply grateful for their initiative in conceiving this project and their ongoing dedication to its success. Their collaborative spirit and constructive feedback have significantly contributed to the quality and direction of this work.  

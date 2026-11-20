@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Sheet</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Balance Sheet</h1>
+    <h2>Here you can make your balance.</h2>
+    <p>Set the Filter options for the balance.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form id="balanceFilter">
+      <label>From:</label>
+      <label>Up to:</label>
+      <label>Type:</label>
+      <label>Role:</label>
+      <input type="datetime-local" name="start" id="start" required>
+      <input type="datetime-local" name="end" id="end" required>
+      <select id="type" name="type">
+        <option value="All">All</option>
+        <option value="All_not_free">All (not free)</option>
+        <option value="Out_all">Out (all)</option>
+        <option value="Out_not_free">Out (not free)</option>
+        <option value="Output">Output (only)</option>
+        <option value="Output_not_free">Output (not free)</option>
+        <option value="Return">Return (only)</option>
+        <option value="Return_not_free">Return (not free)</option>
+        <option value="Order">Order (only)</option>
+        <option value="Order_not_free">Order (not free)</option>
+        <option value="_free">Free (only)</option>
+        <option value="Input">Input (only)</option>
+      </select>
+      <select id="role" name="role">
+        <option value="all">All</option>
+        <option value="master">Master</option>
+        <option value="organizer">Organizer</option>
+        <option value="negotiator">Negotiator</option>
+        <option value="issuer">Issuer</option>
+      </select>
+      <label>User:</label>
+      <label>Category:</label>
+      <label>Item:</label>
+      <span class="grid-spacer"></span> 
+      <input name="user" id="user">
+      <input name="category" id="category" list="cat_opions">
+      <datalist id="cat_opions">
+        {% for category in inventory.keys() %}
+          <option value="{{ category }}"></option>
+        {% endfor %}
+      </datalist>
+      <input name="item" id="item" list="item_options">
+      <datalist id="item_options">
+        {% for category in inventory.values() %}
+          {% for item in category %}
+            <option value="{{ item['item'] }}"></option>
+          {% endfor %}
+        {% endfor %}
+      </datalist>
+      <button type="submit">Make Balance</button>
+    </form>
+    <div id="flow-log-data"
+     data-flow-log='{{ flow_log | tojson | safe }}'>
+    </div>
+    <h2>Balance overview:</h2>
+    <table id="overview-table">
+      <thead>
+          <tr>
+              <th style="text-align: center;">Item</th> 
+              <th style="text-align: center;">Quantity Sum</th> 
+              <th style="text-align: center;">Value Sum</th> 
+          </tr>
+      </thead>
+      <tbody id="overview-body"></tbody>
+    </table>
+    <h2>Balance log:</h2>
+    <table id="balance-table">
+      <thead>
+          <tr>
+            {% for key in flow_log[0].keys() %}
+              <th style="text-align: center;">{{ key }}</th>
+            {% endfor %}
+          </tr>
+      </thead>
+      <tbody id="balance-body">
+      </tbody>
+      <tfoot id="balance-foot">
+        <tr id="sumrow">
+          {% for key in flow_log[0].keys() %}
+            <th id="sum{{key}}" style="text-align: center;"></th>
+          {% endfor %}
+          <th style="text-align: center;">Sum</th>
+        </tr>
+      </tfoot>
+    </table>
+    <script>
+      var element = document.body;
+      if (window.sessionStorage.getItem('Mode') === 'dark') {
+        element.classList.toggle("dark-mode");
+      }
+
+    function isnumvalue(text) {
+      if (!text) return false;
+      // Dezimal-Komma in Dezimal-Punkt umwandeln
+      text = text.replace(',', '.').trim();
+      return !isNaN(text) && text !== '';
+    }
+
+    function parsenum(text) {
+      return parseFloat(text.replace(',', '.')) || 0;
+    }
+
+    document.getElementById('balanceFilter').addEventListener('submit', function (event) {
+      event.preventDefault(); // prevents the actual/real submission/reload
+      console.log("Submit-Handler wurde aufgerufen");
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+      const type_string = document.getElementById('type').value;
+      let type_array
+      let not_type_array
+      if (type_string === 'All'){
+        type_array = ['Order','Output','Return', 'Input'];
+        not_type_array = [];
+      } else if (type_string === 'All_not_free'){
+        type_array = ['Order','Output','Return', 'Input'];
+        not_type_array = [_free];
+      } else if (type_string === 'Out_all'){
+        type_array = ['Order','Output','Return'];
+        not_type_array = [];
+      } else if (type_string === 'Out_not_free'){
+        type_array = ['Order','Output','Return'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Output_not_free'){
+        type_array = ['Output'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Return_not_free'){
+        type_array = ['Return'];
+        not_type_array = ['_free'];
+      } else if (type_string === 'Order_not_free'){
+        type_array = ['Order'];
+        not_type_array = ['_free'];
+      } else {
+        type_array = [type_string];
+        not_type_array = [];
+      }
+      const role_string = document.getElementById('role').value;
+      let role_array
+      if (role_string === 'all'){
+        role_array = ['master','organizer','negotiator'];
+      } else {
+        role_array = [role_string];
+      }
+      const user = document.getElementById('user').value;
+      const cat = document.getElementById('category').value;
+      const item = document.getElementById('item').value;
+      const elem = document.getElementById("flow-log-data");
+      const flow_log = JSON.parse(elem.dataset.flowLog); // here correct because from html to js data-flow-log turns to elem.dataset.flowLog
+      const theadThs = document.querySelectorAll('#balance-table thead th'); // these are the tabel cells with paramters
+      const columns = Array.from(theadThs).map(th => th.textContent.trim()); // these are only the content not the tabel cells with paramters
+      const tbalancebody = document.getElementById('balance-body');
+      const tbalancefoot = document.getElementById('balance-foot');
+      tbalancebody.replaceChildren();  // delete old content
+      flowLogLoop:
+      for (const [id, eintrag] of Object.entries(flow_log)){
+        const tr = document.createElement('tr');
+        for (const col of columns){
+          if (col === 'time' && start > eintrag[col]) { continue flowLogLoop }
+          if (col === 'time' && end < eintrag[col]) { continue flowLogLoop }
+          if (col === 'type' && !type_array.some(item => eintrag[col].includes(item)) || not_type_array.some(item => eintrag[col].includes(item))){ continue flowLogLoop }
+          if (col === 'role' && !role_array.includes(eintrag[col])){ continue flowLogLoop }
+          if (col === 'user' && user !=='' && eintrag[col] !== user){ continue flowLogLoop }
+          if (col === 'category' && cat !=='' && eintrag[col] !== cat){ continue flowLogLoop }
+          if (col === 'item' && item !=='' && eintrag[col] !== item){ continue flowLogLoop }
+          const td = document.createElement('td');
+          td.style.textAlign = 'center'
+          td.textContent = eintrag[col] ?? "";  // falls ein Feld mal fehlt
+          tr.appendChild(td);
+        }
+        tbalancebody.appendChild(tr);
+      }
+      for (let col = 0; col < columns.length; col++){
+        let sum = 0;
+        let onlynum = true;
+        for (let row = 0; row < tbalancebody.rows.length; row++){
+          const zelle = tbalancebody.rows[row].cells[col];
+          if (!zelle) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+          const text = zelle.textContent.trim();
+          if (text === '') continue; // ignore empy cells
+          if (!isnumvalue(text)) {
+            onlynum = false;
+            break; // do not sum cols with text
+          }
+          sum += parsenum(text);
+        }
+        const targetcell =  tbalancefoot.rows[0].cells[col];
+        if (!targetcell) continue; // Since the table isn't irregular, it's not really necessary, but it's safe to be sure
+        if (onlynum){
+          targetcell.textContent = sum.toFixed(2);
+        } else {
+          targetcell.textContent = "---" ;// --- sring in not only number cols
+        }
+      }
+      const toverviewbody = document.getElementById('overview-body');
+      const overview = new Map();
+      const itemIndex = columns.indexOf("item"); // colums defined at the top in creation of tbody of full log table
+      const valueIndex = columns.indexOf("value"); // colums defined at the top in creation of tbody of full log table
+      const quantityIndex = columns.indexOf("quantity"); // colums defined at the top in creation of tbody of full log table
+
+      for (const row of tbalancebody.rows){
+        const cells = row.cells;
+        const itemcelltxt = cells[itemIndex].textContent.trim();
+        const quantitycellnum = parsenum(cells[quantityIndex].textContent.trim());
+        const valuecellnum = parsenum(cells[valueIndex].textContent.trim());
+        
+        // Skip empty or not valid value (aka inputs) 0 is only when parsum finds no number so in case of empty or not valid value
+        if (valuecellnum === 0 ){continue}
+
+        if (!overview.has(itemcelltxt)) {
+          overview.set(itemcelltxt, {
+            count: 0,
+            value: 0
+          });
+        }
+
+        const summary = overview.get(itemcelltxt);
+        summary.count += quantitycellnum;
+        summary.value += valuecellnum;
+      }
+      toverviewbody.replaceChildren();  // delete old content
+
+      for (const [itemcelltxt, summary] of overview) {
+        const row = toverviewbody.insertRow();
+
+        row.insertCell().textContent = itemcelltxt;
+        row.insertCell().textContent = summary.count;
+        row.insertCell().textContent = summary.value.toFixed(2);
+      }
+    });
+    </script>
+  </body>
+</html>

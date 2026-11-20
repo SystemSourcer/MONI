@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einstellungen</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/style.css') }}">
+  </head>
+  <body>
+    <div class="icon-moni" onclick="window.location.href='/dashboard'"><h1>MONI<h1></div>
+    <h1>Einstellungen</h1>
+    <h2>Hier können Sie die Einstellungen bearbeiten</h2>
+    <p>Stellen sie die Werte sorgfältig ein...</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post" action="/settings">
+      <label>Einstellung:</label>
+      <label>Wert:</label>
+      <label>Neuer Wert:</label>
+      <span class="grid-spacer"></span>
+      {% for option, val in settings.items() %}
+        {% if 'Color-' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input type="color" id="{{ option }}_value" value="{{ val }}" disabled>
+          <input type="color" name="{{ option }}" id="{{ option }}_new_val" value="{{ val }}" required>
+          <span class="grid-spacer"></span>
+        {% elif 'Order_Bon' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly> 
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="Off" {% if val == "Off" %} selected {% endif %}>Aus</option>
+            <option value="Order" {% if val == "Order" %} selected {% endif %}>Bestellung</option>
+            <option value="Prepare" {% if val == "Prepare" %} selected {% endif %}>Vorbereitung</option>
+          </select>
+          <span class="grid-spacer"></span>    
+        {% elif 'Language' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly> 
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="en" {% if val == "en" %} selected {% endif %}>Englisch</option>
+            <option value="de" {% if val == "de" %} selected {% endif %}>Deutsch</option>
+          </select>
+          <span class="grid-spacer"></span>       
+        {% elif 'Output_Bon' in option or 'Issuer' in option or 'Order' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly>
+          <select name="{{ option }}" id="{{ option }}_new_val" required>
+            <option value="Off" >Aus</option>
+            <option value="On" {% if val == "On" %} selected {% endif %}>An</option>
+          </select>
+          <span class="grid-spacer"></span>
+        {% elif 'Auto_Prepare-' in option or 'Row_Chars' in option %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input type="number" id="{{ option }}_value" value="{{ val }}" readonly>
+          <input type="number" name="{{ option }}" id="{{ option }}_new_val" min="0" max="120" step="1" value="{{ val }}" required>
+          <span class="grid-spacer"></span>
+        {% else %}
+          <input id="{{ option }}_option" value="{{ option}}" readonly>
+          <input id="{{ option }}_value" value="{{ val }}" readonly>
+          <input name="{{ option }}" id="{{ option }}_new_val" value="{{ val }}" >
+          <span class="grid-spacer"></span>
+        {% endif %}
+      {% endfor %}
+      <span class="grid-spacer"></span> 
+      <span class="grid-spacer"></span> 
+      <span class="grid-spacer"></span>
+      <button type="submit">Einstellungen Speicher</button>
+    </form>
+    <script>
+        var element = document.body;
+        if (window.sessionStorage.getItem('Mode') === 'dark') {
+          element.classList.toggle("dark-mode");
+        }
+    </script>
+  </body>
+</html>

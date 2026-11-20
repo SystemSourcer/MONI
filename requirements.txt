@@ -1,4 +1,5 @@
+jinja2
 uvicorn
 fastapi
-jinja2
+python-escpos
 python-multipart
